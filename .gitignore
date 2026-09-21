@@ -26,3 +26,8 @@ coverage/
 
 # État d'agent local
 .codewhale/
+
+# Documents sensibles (identité société, comptes bancaires) — hors du dépôt
+Helveticore OÜ.pdf
+Helveticore OÜ _ e-Äriregister.pdf
+PayoneerToRevolutHelveticore.png

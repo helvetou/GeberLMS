@@ -14,7 +14,7 @@ Document d'architecture / solution technique. Numéro : SPEC-002. Version : 0.1.
 | Base de données | Cloudflare D1 (SQLite) via Drizzle ORM | Léger, gratuit au départ, schéma versionné. |
 | Fichiers | Cloudflare R2 | Uploads d'apprenants et ressources. |
 | Auth | Sessions sur Workers + comptes en D1 | Contrôle total, zéro coût par utilisateur. |
-| Paiement | Stripe Checkout + webhook | Standard, cartes, codes promo natifs, facturation. |
+| Paiement | Payoneer (compte Helveticore validé) + retrait Revolut | Déjà validé pour l'exploitant ; flux semi-manuel compatible avec la création de compte par l'admin. |
 | LLM | Workers AI (Gemini) par défaut, DeepSeek en option | Couche d'abstraction pour changer de provider. |
 | Tests | Vitest (logique métier) | TDD, rapide, sans infra. |
 
@@ -28,7 +28,7 @@ Navigateur ──► Cloudflare (SvelteKit SSR/edge)
                  ├─ D1 (utilisateurs, cours, inscriptions, coupons, factures, logs)
                  ├─ R2 (vidéos, documents déposés)
                  ├─ KV (sessions, cache léger)
-                 ├─ Stripe (checkout, webhook)
+                 ├─ Payoneer (encaissement, retrait vers Revolut)
                  └─ LLM (Workers AI / DeepSeek) — génération de quiz
 ```
 
@@ -63,12 +63,13 @@ Tous les montants sont en **centimes entiers** (BR-01).
 
 1. L'acheteur (tuteur ou auto-payeur) choisit un cours, applique éventuellement un coupon.
 2. Le LMS calcule le prix (remise + TVA au pays de l'acheteur) via `domain/pricing`.
-3. Redirection vers Stripe Checkout (session) ; aucune carte n'est saisie côté LMS.
-4. Webhook `checkout.session.completed` → le LMS active l'inscription.
+3. L'admin émet une **demande de paiement Payoneer** à l'acheteur (ou checkout Payoneer si disponible) ; aucune carte n'est saisie côté LMS.
+4. Payoneer notifie l'encaissement → le LMS (ou l'admin) active l'inscription.
 5. L'admin crée le compte apprenant via script/tableau de bord après paiement.
-6. La facture TVA est générée et archivée.
+6. La facture TVA est générée par le système et archivée.
+7. Hors LMS : les fonds sont retirés du solde Payoneer vers le compte Revolut de récupération (voir `PayoneerToRevolutHelveticore.png`).
 
-> ⚠️ **Conformité** : le règlement Stripe vers un IBAN personnel (Revolut Personnel) peut poser un problème (nom du titulaire / usage commercial). À valider avec Stripe et un comptable estonien avant mise en production. Point de risque R-01.
+> ⚠️ **À confirmer** : le mode d'intégration exact (demande de paiement semi-manuelle vs Payoneer Checkout automatisé) et la disponibilité pour un commerçant estonien doivent être validés. Le flux semi-manuel correspond bien au modèle « compte créé par l'admin après paiement ». Point de risque R-01.
 
 ---
 
@@ -109,4 +110,4 @@ L'anti-copie **absolue n'existe pas sur le web** (capture d'écran, photographie
 - **ADR-002** — D1 plutôt que Postgres : gratuit au départ, suffisant pour le volume cible.
 - **ADR-003** — Montants en centimes entiers (pas de flottant).
 - **ADR-004** — Logique métier isolée dans `src/lib/domain` pour TDD.
-- **ADR-005** — Stripe plutôt que Payoneer pour le checkout consommateur.
+- **ADR-005** — Payoneer (déjà validé Helveticore, lié à Revolut) plutôt que Stripe, pour éviter une nouvelle procédure de vérification.

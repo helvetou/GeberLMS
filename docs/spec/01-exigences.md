@@ -22,7 +22,7 @@ exploités via **Helveticore OÜ** (Estonie). Elle permet de :
 ## 2. Contexte métier
 
 - **Fiscalité** : déclarations en Estonie. Facturation en EUR.
-- **Paiement** : Stripe Checkout, règlement des fonds vers un compte Revolut (IBAN) de l'exploitant.
+- **Paiement** : Payoneer (compte Helveticore déjà validé), retrait des fonds vers un compte Revolut (IBAN) de récupération.
 - **TVA** : taux du pays de l'acheteur (régime OSS pour les consommateurs UE). Hors UE : pas de TVA UE.
 - **Langues des cours** : une langue parmi FR, EN, AR, DE (cours monolingue).
 - **Volume cible au lancement** : quelques dizaines d'utilisateurs.
@@ -80,8 +80,8 @@ Identifiants uniques `FR-xx`. Chaque exigence est testable et tracée (voir matr
 
 ### 4.5 Paiement et coupons
 
-- **FR-40** — Le paiement passe par Stripe Checkout (aucune donnée carte n'est hébergée par le LMS).
-- **FR-41** — À la confirmation du paiement (webhook), l'accès est activé et le compte apprenant peut être créé par l'admin.
+- **FR-40** — Le paiement passe par Payoneer (demande de paiement ou checkout) ; aucune donnée carte n'est hébergée par le LMS.
+- **FR-41** — À la confirmation de l'encaissement Payoneer, l'accès est activé et le compte apprenant peut être créé par l'admin.
 - **FR-42** — L'admin crée des coupons : réduction en pourcentage (0–100) ou en montant fixe (EUR).
 - **FR-43** — Un coupon de 100 % correspond à une gratuité totale.
 - **FR-44** — Un coupon peut être limité (date d'expiration, nombre d'utilisations).

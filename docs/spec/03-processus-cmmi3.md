@@ -77,7 +77,7 @@ La matrice complète est tenue à jour à chaque ajout d'exigence.
 
 | Id | Risque | Gravité | Mitigation |
 |----|--------|---------|------------|
-| R-01 | Règlement Stripe vers un IBAN Revolut Personnel (usage commercial) | Haute | Valider avec Stripe + comptable estonien avant prod. |
+| R-01 | Mode d'intégration Payoneer à confirmer (demande de paiement semi-manuelle vs checkout automatisé) et disponibilité pour un commerçant estonien | Moyenne | Valider le produit Payoneer exact ; le flux semi-manuel convient au modèle « compte créé par l'admin ». |
 | R-02 | Taux de TVA UE inexacts/obsolètes (OSS) | Haute | Table versionnée + re-validation officielle avant prod. |
 | R-03 | Coût LLM hors budget | Moyenne | Suivi mensuel, alerte à 80 €, cache des générations. |
 | R-04 | Anti-copie contournée (capture) | Moyenne | Dissuasion + journalisation ; pas de fausse promesse d'imperméabilité. |

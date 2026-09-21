@@ -65,6 +65,9 @@ Chaque exigence est reliée à son implémentation et à ses tests. Extrait init
 
 | Exigence | Module | Tests |
 |----------|--------|-------|
+| FR-01 / FR-03 | `src/lib/domain/roles.ts` | `tests/domain/roles.test.ts` |
+| FR-02 | `src/lib/domain/user.ts` | `tests/domain/user.test.ts` |
+| FR-04 / FR-07 | `src/lib/domain/guardianship.ts` | `tests/domain/guardianship.test.ts` |
 | FR-42 / FR-43 / FR-44 | `src/lib/domain/coupon.ts` | `tests/domain/coupon.test.ts` |
 | FR-46 / BR-01 / BR-02 / BR-03 / BR-04 | `src/lib/domain/pricing.ts` | `tests/domain/pricing.test.ts` |
 | NFR-08 / BR-05 | `src/lib/domain/vat.ts` | `tests/domain/vat.test.ts` |

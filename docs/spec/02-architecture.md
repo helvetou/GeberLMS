@@ -33,7 +33,7 @@ Navigateur ──► Cloudflare (SvelteKit SSR/edge)
 ```
 
 - **`src/lib/domain`** : logique métier pure (prix, TVA, coupons, progression). Aucune dépendance framework/infra → testable en isolation (TDD).
-- **`src/lib/server`** : adaptateurs Cloudflare (D1, R2, Stripe, LLM) et routes API.
+- **`src/lib/server`** : adaptateurs Cloudflare (D1, R2, Payoneer, LLM) et routes API.
 - **`src/routes`** : pages SvelteKit (apprenant, tuteur, admin).
 
 ---

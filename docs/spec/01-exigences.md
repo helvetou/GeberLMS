@@ -95,7 +95,7 @@ Identifiants uniques `FR-xx`. Chaque exigence est testable et tracée (voir matr
 
 - **NFR-01 (Plateforme)** — Déploiement sur Cloudflare (Workers/Pages, D1, R2, KV).
 - **NFR-02 (Performance)** — Structure légère ; temps de réponse page cible < 1,5 s (p95).
-- **NFR-03 (Sécurité)** — Pas de données carte côté LMS (Stripe) ; contrôle d'accès strict par rôle ; secrets hors du code.
+- **NFR-03 (Sécurité)** — Pas de données carte côté LMS (Payoneer) ; contrôle d'accès strict par rôle ; secrets hors du code.
 - **NFR-04 (Testabilité)** — TDD ; logique métier en modules purs sans dépendance à l'infrastructure.
 - **NFR-05 (Maintenabilité)** — Code typé (TypeScript strict), modulaire, documenté.
 - **NFR-06 (Coût)** — Génération LLM ≤ 100 € / mois.

@@ -1,0 +1,104 @@
+# LMS Helveticore — Processus (CMMI-DEV niveau 3)
+
+Document de processus. Numéro : SPEC-003. Version : 0.1.
+
+---
+
+## 1. Objet
+
+Ce document définit le **processus standard** de développement du projet, aligné sur
+l'esprit CMMI-DEV niveau 3 : processus documenté, standardisé, adaptable, avec revues
+par les pairs, traçabilité et mesure. La méthodologie d'implémentation est le **TDD**.
+
+---
+
+## 2. Cycle de vie standard
+
+```
+Exigence ──► Conception ──► Implémentation (TDD) ──► Vérification ──► Validation ──► Livraison
+                │                    │                    │               │              │
+             revue               revue code           tests verts     revue métier   déploiement
+```
+
+Chaque exigence traverse l'ensemble du cycle. Rien n'est « fait » tant que la vérification
+(tests) n'est pas passée et que la revue n'est pas tracée.
+
+---
+
+## 3. TDD — règles de travail
+
+Boucle stricte : **Rouge → Vert → Refactor**.
+
+1. Écrire un test qui exprime le comportement attendu (il échoue : *rouge*).
+2. Écrire le minimum de code pour faire passer le test (*vert*).
+3. Refactoriser sans changer le comportement (les tests restent verts).
+4. Commit par incrément validé.
+
+Règles :
+
+- Pas de code de production sans test qui le couvre.
+- Logique métier dans `src/lib/domain`, testée par Vitest sans infrastructure.
+- Un test exprime un comportement, pas une implémentation.
+- La suite de tests fait partie de la définition du « terminé » (DoD).
+
+Exemple déjà en place : `domain/pricing`, `domain/coupon`, `domain/vat` + 23 tests verts.
+
+---
+
+## 4. Portes de revue (gates)
+
+| Porte | Quand | Critère de sortie |
+|-------|-------|-------------------|
+| G1 Exigences | fin de SPEC-001 | exigences identifiées, testables, tracées |
+| G2 Conception | avant codage | architecture + modèle de données approuvés |
+| G3 Code | fin d'une exigence | tests verts + revue par les pairs |
+| G4 Vérification | avant livraison | suite complète verte, typecheck propre |
+| G5 Validation | avant prod | scénarios métier validés par l'exploitant |
+
+Toute porte bloquante est documentée et doit être levée avant de continuer.
+
+---
+
+## 5. Matrice de traçabilité
+
+Chaque exigence est reliée à son implémentation et à ses tests. Extrait initial :
+
+| Exigence | Module | Tests |
+|----------|--------|-------|
+| FR-42 / FR-43 / FR-44 | `src/lib/domain/coupon.ts` | `tests/domain/coupon.test.ts` |
+| FR-46 / BR-01 / BR-02 / BR-03 / BR-04 | `src/lib/domain/pricing.ts` | `tests/domain/pricing.test.ts` |
+| NFR-08 / BR-05 | `src/lib/domain/vat.ts` | `tests/domain/vat.test.ts` |
+
+La matrice complète est tenue à jour à chaque ajout d'exigence.
+
+---
+
+## 6. Gestion des risques (registre initial)
+
+| Id | Risque | Gravité | Mitigation |
+|----|--------|---------|------------|
+| R-01 | Règlement Stripe vers un IBAN Revolut Personnel (usage commercial) | Haute | Valider avec Stripe + comptable estonien avant prod. |
+| R-02 | Taux de TVA UE inexacts/obsolètes (OSS) | Haute | Table versionnée + re-validation officielle avant prod. |
+| R-03 | Coût LLM hors budget | Moyenne | Suivi mensuel, alerte à 80 €, cache des générations. |
+| R-04 | Anti-copie contournée (capture) | Moyenne | Dissuasion + journalisation ; pas de fausse promesse d'imperméabilité. |
+| R-05 | Fuite d'accès entre tuteurs | Haute | Contrôle d'accès par payeur testé systématiquement. |
+| R-06 | Non-conformité RGPD | Moyenne | Consentement, minimisation, droit à l'effacement. |
+
+---
+
+## 7. Mesures et indicateurs
+
+- Couverture des tests du domaine (objectif : ≥ 80 % sur `domain`).
+- Nombre de défauts par livraison.
+- Temps de cycle (exigence → livrée).
+- Dépense LLM mensuelle (seuil : 100 €).
+- Temps de réponse p95 (seuil : 1,5 s).
+
+---
+
+## 8. Gestion de configuration
+
+- Code sous Git (branche `main` protégée, commits atomiques).
+- Versionnement sémantique.
+- Secrets hors du dépôt (`.env`, `.dev.vars`, jamais commités).
+- Documents de spec versionnés avec le code.

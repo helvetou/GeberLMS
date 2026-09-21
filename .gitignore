@@ -1,0 +1,28 @@
+# Dépendances
+node_modules/
+
+# Builds
+dist/
+build/
+.svelte-kit/
+.output/
+
+# Environnement / secrets
+.env
+.env.*
+!.env.example
+.dev.vars
+
+# OS / éditeurs
+.DS_Store
+Thumbs.db
+*.swp
+
+# Couverture de tests
+coverage/
+
+# Wrangler / Cloudflare
+.wrangler/
+
+# État d'agent local
+.codewhale/

@@ -107,6 +107,7 @@ export const enrollments = sqliteTable('enrollments', {
     .notNull()
     .references(() => users.id),
   couponId: text('coupon_id').references(() => coupons.id),
+  discountCents: integer('discount_cents').notNull().default(0),
   status: text('status', { enum: ['pending', 'active', 'expired', 'revoked'] })
     .notNull()
     .default('pending'),

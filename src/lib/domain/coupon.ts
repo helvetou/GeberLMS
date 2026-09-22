@@ -69,3 +69,12 @@ export function validateCoupon(coupon: Coupon, now: Date = new Date()): void {
     throw new CouponError('Limite d\u2019utilisation du coupon atteinte');
   }
 }
+
+/**
+ * Consomme une utilisation du coupon : valide puis incrémente le compteur
+ * (copie immuable). Lève une CouponError si le coupon est inutilisable.
+ */
+export function consumeCoupon(coupon: Coupon, now: Date = new Date()): Coupon {
+  validateCoupon(coupon, now);
+  return { ...coupon, usedCount: (coupon.usedCount ?? 0) + 1 };
+}

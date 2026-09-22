@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { CouponError, discountFor, type Coupon } from '../../src/lib/domain/coupon';
+import { CouponError, discountFor, consumeCoupon, type Coupon } from '../../src/lib/domain/coupon';
 
 const base: Coupon = { code: 'TEST', type: 'percent', value: 20 };
 
@@ -43,5 +43,24 @@ describe('coupon discountFor', () => {
 
   it('rejects a disabled coupon', () => {
     expect(() => discountFor({ ...base, enabled: false }, 10000)).toThrow(CouponError);
+  });
+});
+
+describe('coupon consumeCoupon', () => {
+  it('increments the used count', () => {
+    expect(consumeCoupon(base).usedCount).toBe(1);
+    expect(consumeCoupon({ ...base, usedCount: 3 }).usedCount).toBe(4);
+  });
+
+  it('treats a missing usedCount as 0', () => {
+    expect(consumeCoupon(base).usedCount).toBe(1);
+  });
+
+  it('rejects when the limit is already reached', () => {
+    expect(() => consumeCoupon({ ...base, maxUses: 2, usedCount: 2 })).toThrow(CouponError);
+  });
+
+  it('rejects an expired coupon', () => {
+    expect(() => consumeCoupon({ ...base, expiresAt: '2020-01-01' })).toThrow(CouponError);
   });
 });

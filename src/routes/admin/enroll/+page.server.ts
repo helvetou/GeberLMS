@@ -24,13 +24,18 @@ export const actions: Actions = {
     const data = await request.formData();
     const learnerEmail = String(data.get('learnerEmail') ?? '').trim();
     const courseId = String(data.get('courseId') ?? '').trim();
+    const couponCode = String(data.get('couponCode') ?? '').trim();
     if (!learnerEmail || !courseId) {
       return fail(400, { error: 'Email et cours requis' });
     }
 
     try {
-      await enrollLearner(createDb(dbBinding), { learnerEmail, courseId });
-      return { ok: true };
+      const { totalCents } = await enrollLearner(createDb(dbBinding), {
+        learnerEmail,
+        courseId,
+        couponCode: couponCode || undefined,
+      });
+      return { ok: true, totalCents };
     } catch (err) {
       if (err instanceof EnrollmentServiceError) {
         return fail(400, { error: err.message });

@@ -1,8 +1,10 @@
 import { eq } from 'drizzle-orm';
 import type { DB } from './db';
-import { users, courses, guardianships, enrollments } from './db/schema';
+import { users, courses, guardianships, enrollments, coupons } from './db/schema';
 import { createEnrollmentForLearner } from '$lib/domain/enrollment';
 import { computePrice } from '$lib/domain/pricing';
+import { consumeCoupon, type Coupon } from '$lib/domain/coupon';
+import { findCouponByCode } from './coupon';
 import type { User } from '$lib/domain/user';
 
 export class EnrollmentServiceError extends Error {
@@ -32,12 +34,12 @@ export async function listCourses(db: DB): Promise<CourseOption[]> {
 }
 
 /**
- * Inscrit un apprenant à un cours : résout le payeur (domaine), calcule le
- * prix (remise + TVA) et enregistre l'inscription.
+ * Inscrit un apprenant à un cours : résout le payeur (domaine), applique un
+ * éventuel coupon, calcule le prix (remise + TVA) et enregistre l'inscription.
  */
 export async function enrollLearner(
   db: DB,
-  input: { learnerEmail: string; courseId: string; countryCode?: string },
+  input: { learnerEmail: string; courseId: string; countryCode?: string; couponCode?: string },
 ): Promise<{ enrollmentId: string; totalCents: number }> {
   const userRow = await db.select().from(users).where(eq(users.email, input.learnerEmail)).get();
   if (!userRow || userRow.role !== 'learner') {
@@ -64,9 +66,22 @@ export async function enrollLearner(
     guardianships: links,
   });
 
+  let coupon: Coupon | undefined;
+  let couponId: string | null = null;
+  const couponCode = input.couponCode?.trim();
+  if (couponCode) {
+    const record = await findCouponByCode(db, couponCode);
+    if (!record) {
+      throw new EnrollmentServiceError('Coupon introuvable');
+    }
+    coupon = consumeCoupon(record.coupon);
+    couponId = record.id;
+  }
+
   const price = computePrice({
     netCents: courseRow.priceCents,
     countryCode: input.countryCode ?? 'EE',
+    coupon,
   });
 
   await db.insert(enrollments).values({
@@ -74,13 +89,23 @@ export async function enrollLearner(
     learnerId: enrollment.learnerId,
     courseId: enrollment.courseId,
     payerId: enrollment.payerId,
+    couponId,
     status: enrollment.status,
-    netCents: price.netCents,
+    netCents: price.discountedNetCents,
+    discountCents: price.discountCents,
     vatRatePercent: price.vatRatePercent,
     vatCents: price.vatCents,
     totalCents: price.totalCents,
     createdAt: new Date().toISOString(),
   });
+
+  if (couponId && coupon) {
+    await db
+      .update(coupons)
+      .set({ usedCount: coupon.usedCount ?? 0 })
+      .where(eq(coupons.id, couponId))
+      .run();
+  }
 
   return { enrollmentId: enrollment.id, totalCents: price.totalCents };
 }

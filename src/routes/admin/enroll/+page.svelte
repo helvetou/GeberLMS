@@ -19,6 +19,7 @@
       {/each}
     </select>
   </label>
+  <label>Coupon (optionnel) <input type="text" name="couponCode" /></label>
   <button type="submit">Inscrire</button>
 </form>
 
@@ -27,5 +28,5 @@
 {/if}
 
 {#if form?.ok}
-  <p role="status">Inscription créée.</p>
+  <p role="status">Inscription créée — total {form.totalCents / 100} €.</p>
 {/if}

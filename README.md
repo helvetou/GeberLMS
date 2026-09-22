@@ -24,6 +24,14 @@ npm run test:watch
 npm run typecheck  # typage de la logique métier (tsc)
 ```
 
+## Base de données locale (D1)
+
+```bash
+npx wrangler d1 execute DB --local --file migrations/0001_init.sql
+npx wrangler d1 execute DB --local --file migrations/0002_sessions.sql
+SEED_ADMIN_EMAIL=admin@example.com SEED_ADMIN_PASSWORD=changeme npx tsx scripts/seed-admin.ts
+```
+
 ## Structure
 
 ```

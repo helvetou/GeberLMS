@@ -144,6 +144,19 @@ export const activityLogs = sqliteTable('activity_logs', {
   createdAt: text('created_at').notNull(),
 });
 
+export const quizQuestions = sqliteTable('quiz_questions', {
+  id: text('id').primaryKey(),
+  lessonId: text('lesson_id')
+    .notNull()
+    .references(() => lessons.id, { onDelete: 'cascade' }),
+  position: integer('position').notNull().default(0),
+  prompt: text('prompt').notNull(),
+  choices: text('choices').notNull(),
+  correctIndex: integer('correct_index').notNull(),
+  points: integer('points').notNull().default(1),
+  createdAt: text('created_at').notNull(),
+});
+
 export type UserRow = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type SessionRow = typeof sessions.$inferSelect;

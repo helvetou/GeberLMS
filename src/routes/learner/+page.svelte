@@ -22,7 +22,26 @@
             {#each c.lessons as l (l.lessonId)}
               <li>
                 {l.title} — {l.status}
-                {#if l.status !== 'completed'}
+                {#if l.type === 'quiz'}
+                  {#if (data.quizzes[l.lessonId] ?? []).length > 0}
+                    <form method="POST" action="?/submitQuiz">
+                      <input type="hidden" name="enrollmentId" value={c.enrollmentId} />
+                      <input type="hidden" name="lessonId" value={l.lessonId} />
+                      {#each data.quizzes[l.lessonId] as q (q.id)}
+                        <p>{q.prompt}</p>
+                        {#each q.choices as choice, i (i)}
+                          <label>
+                            <input type="radio" name={`q_${q.id}`} value={i} />
+                            {choice}
+                          </label>
+                        {/each}
+                      {/each}
+                      <button type="submit">Valider le quiz</button>
+                    </form>
+                  {:else}
+                    <em>Quiz sans question.</em>
+                  {/if}
+                {:else if l.status !== 'completed'}
                   <form method="POST" action="?/complete" style="display: inline">
                     <input type="hidden" name="enrollmentId" value={c.enrollmentId} />
                     <input type="hidden" name="lessonId" value={l.lessonId} />
@@ -44,6 +63,11 @@
   <p role="alert">{form.error}</p>
 {/if}
 
-{#if form?.ok}
+{#if form?.ok && form.quizResult}
+  <p role="status">
+    Quiz corrigé : {form.quizResult.correct}/{form.quizResult.total} bonnes réponses
+    — {form.quizResult.percentage} %.
+  </p>
+{:else if form?.ok}
   <p role="status">Progression enregistrée.</p>
 {/if}

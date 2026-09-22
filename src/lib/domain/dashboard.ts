@@ -1,6 +1,6 @@
 import { learnersOfTutor, type GuardianshipList } from './guardianship';
 import { enrollmentsOfLearner, type Enrollment } from './enrollment';
-import { visibleLessonsOfCourse, type Catalog } from './catalog';
+import { visibleLessonsOfCourse, type Catalog, type Lesson } from './catalog';
 import { completedLessonIds, type ProgressEntry, type ProgressStatus } from './progress';
 
 export interface CourseProgress {
@@ -57,6 +57,7 @@ export function buildTutorDashboard(input: {
 export interface LearnerLessonProgress {
   lessonId: string;
   title: string;
+  type: Lesson['type'];
   status: ProgressStatus;
   score?: number;
 }
@@ -99,6 +100,7 @@ export function buildLearnerDashboard(input: {
       return {
         lessonId: lesson.id,
         title: lesson.title,
+        type: lesson.type,
         status: entry?.status ?? 'not_started',
         score: entry?.score,
       };

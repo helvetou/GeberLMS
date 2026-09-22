@@ -12,5 +12,6 @@
     "noEmit": true,
     "types": ["node"]
   },
-  "include": ["src", "tests"]
+  "include": ["src/lib", "tests"],
+  "exclude": ["**/*.svelte"]
 }

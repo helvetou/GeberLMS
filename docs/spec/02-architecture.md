@@ -111,3 +111,4 @@ L'anti-copie **absolue n'existe pas sur le web** (capture d'écran, photographie
 - **ADR-003** — Montants en centimes entiers (pas de flottant).
 - **ADR-004** — Logique métier isolée dans `src/lib/domain` pour TDD.
 - **ADR-005** — Payoneer (déjà validé Helveticore, lié à Revolut) plutôt que Stripe, pour éviter une nouvelle procédure de vérification.
+- **ADR-006** — Épinglage Vite 6 / vite-plugin-svelte 5 / vitest 3 (au lieu du bleeding-edge Vite 8) pour une résolution de dépendances stable et compatible.

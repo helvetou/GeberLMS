@@ -69,6 +69,8 @@ Chaque exigence est reliée à son implémentation et à ses tests. Extrait init
 | FR-02 | `src/lib/domain/user.ts` | `tests/domain/user.test.ts` |
 | FR-04 / FR-07 | `src/lib/domain/guardianship.ts` | `tests/domain/guardianship.test.ts` |
 | FR-05 / FR-06 | `src/lib/domain/enrollment.ts` | `tests/domain/enrollment.test.ts` |
+| FR-13 / FR-14 | `src/lib/domain/content.ts` | `tests/domain/content.test.ts` |
+| FR-10 / FR-11 / FR-12 | `src/lib/domain/catalog.ts` | `tests/domain/catalog.test.ts` |
 | FR-42 / FR-43 / FR-44 | `src/lib/domain/coupon.ts` | `tests/domain/coupon.test.ts` |
 | FR-46 / BR-01 / BR-02 / BR-03 / BR-04 | `src/lib/domain/pricing.ts` | `tests/domain/pricing.test.ts` |
 | NFR-08 / BR-05 | `src/lib/domain/vat.ts` | `tests/domain/vat.test.ts` |

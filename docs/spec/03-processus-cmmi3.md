@@ -78,6 +78,7 @@ Chaque exigence est reliée à son implémentation et à ses tests. Extrait init
 | NFR-03 (auth) | `src/lib/domain/password.ts`, `session.ts` | `tests/domain/password.test.ts`, `session.test.ts` |
 | FR-20 | `src/lib/domain/progress.ts` | `tests/domain/progress.test.ts` |
 | FR-21 | `src/lib/domain/dashboard.ts` | `tests/domain/dashboard.test.ts` |
+| FR-22 | `src/lib/domain/dashboard.ts` | `tests/domain/dashboard.test.ts` |
 
 La matrice complète est tenue à jour à chaque ajout d'exigence.
 

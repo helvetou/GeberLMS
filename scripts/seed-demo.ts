@@ -14,7 +14,9 @@ import { hashPassword } from '../src/lib/domain/password';
 
 async function main(): Promise<void> {
   const password = process.env.SEED_DEMO_TUTOR_PASSWORD ?? 'DemoTutor123!';
+  const learnerPassword = process.env.SEED_DEMO_LEARNER_PASSWORD ?? 'DemoLearner123!';
   const tutorHash = await hashPassword(password);
+  const learnerHash = await hashPassword(learnerPassword);
   const now = new Date().toISOString();
 
   const sql = `
@@ -30,7 +32,7 @@ INSERT INTO users (id, role, self_payer, email, name, locale, password_hash, sta
 VALUES ('demo-tutor', 'tutor', 0, 'tutor@demo.ee', 'Tuteur Démo', 'fr', '${tutorHash}', 'active', '${now}', '${now}');
 
 INSERT INTO users (id, role, self_payer, email, name, locale, password_hash, status, created_at, updated_at)
-VALUES ('demo-learner', 'learner', 0, 'learner@demo.ee', 'Élève Démo', 'fr', NULL, 'active', '${now}', '${now}');
+VALUES ('demo-learner', 'learner', 0, 'learner@demo.ee', 'Élève Démo', 'fr', '${learnerHash}', 'active', '${now}', '${now}');
 
 INSERT INTO guardianships (tutor_id, learner_id, created_at)
 VALUES ('demo-tutor', 'demo-learner', '${now}');
@@ -60,7 +62,9 @@ VALUES ('demo-progress', 'demo-enroll', 'demo-lesson', 'completed', '${now}');
     cwd: process.cwd(),
   });
 
-  console.log(`Demo seedée. Tuteur : tutor@demo.ee / ${password}`);
+  console.log(
+    `Demo seedée. Tuteur : tutor@demo.ee / ${password} · Apprenant : learner@demo.ee / ${learnerPassword}`,
+  );
 }
 
 void main();

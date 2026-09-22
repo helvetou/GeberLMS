@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildTutorDashboard } from '../../src/lib/domain/dashboard';
+import { buildTutorDashboard, buildLearnerDashboard } from '../../src/lib/domain/dashboard';
 import type { Catalog } from '../../src/lib/domain/catalog';
 import type { Enrollment } from '../../src/lib/domain/enrollment';
 import type { Guardianship } from '../../src/lib/domain/guardianship';
@@ -69,5 +69,36 @@ describe('buildTutorDashboard (FR-21)', () => {
   it('returns empty learners for a tutor with no guardianships', () => {
     const d = buildTutorDashboard({ tutorId: 'nope', guardianships, enrollments, catalog, progress });
     expect(d.learners).toEqual([]);
+  });
+});
+
+describe('buildLearnerDashboard (FR-22)', () => {
+  it('lists enrolled courses with per-lesson progress', () => {
+    const d = buildLearnerDashboard({ learnerId: 'l1', enrollments, catalog, progress });
+    expect(d.learnerId).toBe('l1');
+    expect(d.courses.map((c) => c.courseId)).toEqual(['c1', 'c2']);
+
+    const c1 = d.courses[0]!;
+    expect(c1.title).toBe('Français');
+    expect(c1.status).toBe('active');
+    expect(c1.completedLessons).toBe(1);
+    expect(c1.totalLessons).toBe(2); // la + lb (lc cachée exclue)
+
+    const lessons = c1.lessons;
+    expect(lessons.map((l) => l.lessonId)).toEqual(['la', 'lb']);
+    expect(lessons[0]!.status).toBe('completed');
+    expect(lessons[1]!.status).toBe('in_progress');
+  });
+
+  it('defaults missing lessons to not_started', () => {
+    const d = buildLearnerDashboard({ learnerId: 'l2', enrollments, catalog, progress });
+    const c1 = d.courses[0]!;
+    expect(c1.lessons.every((l) => l.status === 'not_started')).toBe(true);
+    expect(c1.completedLessons).toBe(0);
+  });
+
+  it('returns empty courses for a learner with no enrollments', () => {
+    const d = buildLearnerDashboard({ learnerId: 'nope', enrollments, catalog, progress });
+    expect(d.courses).toEqual([]);
   });
 });

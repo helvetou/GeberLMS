@@ -1,7 +1,7 @@
 import { learnersOfTutor, type GuardianshipList } from './guardianship';
 import { enrollmentsOfLearner, type Enrollment } from './enrollment';
 import { visibleLessonsOfCourse, type Catalog } from './catalog';
-import { completedLessonIds, type ProgressEntry } from './progress';
+import { completedLessonIds, type ProgressEntry, type ProgressStatus } from './progress';
 
 export interface CourseProgress {
   courseId: string;
@@ -52,4 +52,68 @@ export function buildTutorDashboard(input: {
   });
 
   return { tutorId: input.tutorId, learners };
+}
+
+export interface LearnerLessonProgress {
+  lessonId: string;
+  title: string;
+  status: ProgressStatus;
+  score?: number;
+}
+
+export interface LearnerCourseProgress {
+  enrollmentId: string;
+  courseId: string;
+  title: string;
+  status: Enrollment['status'];
+  completedLessons: number;
+  totalLessons: number;
+  lessons: LearnerLessonProgress[];
+}
+
+export interface LearnerDashboard {
+  learnerId: string;
+  courses: LearnerCourseProgress[];
+}
+
+/**
+ * Vue du tableau de bord apprenant (FR-22) : ses inscriptions, la progression
+ * par leçon (leçons visibles uniquement) et le total complété.
+ */
+export function buildLearnerDashboard(input: {
+  learnerId: string;
+  enrollments: readonly Enrollment[];
+  catalog: Catalog;
+  progress: readonly ProgressEntry[];
+}): LearnerDashboard {
+  const enrollments = enrollmentsOfLearner(input.enrollments, input.learnerId);
+
+  const courses: LearnerCourseProgress[] = enrollments.map((enrollment) => {
+    const course = input.catalog.courses.find((c) => c.id === enrollment.courseId);
+    const lessons = visibleLessonsOfCourse(input.catalog, enrollment.courseId);
+
+    const lessonRows: LearnerLessonProgress[] = lessons.map((lesson) => {
+      const entry = input.progress.find(
+        (p) => p.enrollmentId === enrollment.id && p.lessonId === lesson.id,
+      );
+      return {
+        lessonId: lesson.id,
+        title: lesson.title,
+        status: entry?.status ?? 'not_started',
+        score: entry?.score,
+      };
+    });
+
+    return {
+      enrollmentId: enrollment.id,
+      courseId: enrollment.courseId,
+      title: course?.title ?? enrollment.courseId,
+      status: enrollment.status,
+      completedLessons: lessonRows.filter((l) => l.status === 'completed').length,
+      totalLessons: lessons.length,
+      lessons: lessonRows,
+    };
+  });
+
+  return { learnerId: input.learnerId, courses };
 }

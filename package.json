@@ -11,6 +11,7 @@
     "dev": "vite dev",
     "build": "vite build",
     "preview": "vite preview",
+    "deploy": "npm run build && npx wrangler deploy",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",

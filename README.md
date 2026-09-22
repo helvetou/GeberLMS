@@ -33,6 +33,28 @@ SEED_ADMIN_EMAIL=admin@example.com SEED_ADMIN_PASSWORD=changeme npx tsx scripts/
 npx tsx scripts/seed-demo.ts   # données de démo (tuteur/apprenant/cours)
 ```
 
+## Déploiement (Cloudflare)
+
+Le Worker est déployé avec Wrangler (`main = .svelte-kit/cloudflare/_worker.js`).
+Le build SvelteKit doit **obligatoirement** tourner avant `wrangler deploy`
+(c'est lui qui génère `.svelte-kit/cloudflare/_worker.js`).
+
+1. **Authentification** : `npx wrangler login` (ou `CLOUDFLARE_API_TOKEN`).
+2. **Base D1 distante** (une seule fois) :
+   ```bash
+   npx wrangler d1 create geberlms
+   # copier le database_id renvoyé dans wrangler.toml (remplacer le placeholder)
+   for f in migrations/*.sql; do npx wrangler d1 execute geberlms --remote --file "$f"; done
+   ```
+3. **Déploiement** :
+   ```bash
+   npm run deploy   # = npm run build && npx wrangler deploy
+   ```
+
+Dans Cloudflare Pages, utiliser comme « Deploy command » :
+`npm run deploy` (ou configurer « Build command » = `npm run build` avant la
+commande de déploiement).
+
 ## Structure
 
 ```

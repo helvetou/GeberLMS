@@ -74,6 +74,8 @@ Chaque exigence est reliée à son implémentation et à ses tests. Extrait init
 | FR-42 / FR-43 / FR-44 | `src/lib/domain/coupon.ts` | `tests/domain/coupon.test.ts` |
 | FR-46 / BR-01 / BR-02 / BR-03 / BR-04 | `src/lib/domain/pricing.ts` | `tests/domain/pricing.test.ts` |
 | NFR-08 / BR-05 | `src/lib/domain/vat.ts` | `tests/domain/vat.test.ts` |
+| FR-03 | `src/lib/domain/authz.ts` | `tests/domain/authz.test.ts` |
+| NFR-03 (auth) | `src/lib/domain/password.ts`, `session.ts` | `tests/domain/password.test.ts`, `session.test.ts` |
 
 La matrice complète est tenue à jour à chaque ajout d'exigence.
 

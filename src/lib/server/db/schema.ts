@@ -134,6 +134,16 @@ export const progress = sqliteTable('progress', {
   updatedAt: text('updated_at').notNull(),
 });
 
+export const activityLogs = sqliteTable('activity_logs', {
+  id: text('id').primaryKey(),
+  actorId: text('actor_id').references(() => users.id),
+  action: text('action').notNull(),
+  targetType: text('target_type'),
+  targetId: text('target_id'),
+  meta: text('meta'),
+  createdAt: text('created_at').notNull(),
+});
+
 export type UserRow = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type SessionRow = typeof sessions.$inferSelect;

@@ -79,6 +79,7 @@ Chaque exigence est reliée à son implémentation et à ses tests. Extrait init
 | FR-20 | `src/lib/domain/progress.ts` | `tests/domain/progress.test.ts` |
 | FR-21 | `src/lib/domain/dashboard.ts` | `tests/domain/dashboard.test.ts` |
 | FR-22 | `src/lib/domain/dashboard.ts` | `tests/domain/dashboard.test.ts` |
+| FR-23 | `src/lib/domain/activity.ts` | `tests/domain/activity.test.ts` |
 
 La matrice complète est tenue à jour à chaque ajout d'exigence.
 

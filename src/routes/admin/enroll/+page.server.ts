@@ -2,6 +2,8 @@ import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { createDb } from '$lib/server/db';
 import { listCourses, enrollLearner, EnrollmentServiceError } from '$lib/server/enrollment';
+import { logActivity } from '$lib/server/activity';
+import { ACTIONS as ACTIVITY_ACTIONS } from '$lib/domain/activity';
 
 export const load: PageServerLoad = async ({ locals, platform }) => {
   if (locals.user?.role !== 'admin') {
@@ -29,11 +31,18 @@ export const actions: Actions = {
       return fail(400, { error: 'Email et cours requis' });
     }
 
+    const db = createDb(dbBinding);
     try {
-      const { totalCents } = await enrollLearner(createDb(dbBinding), {
+      const { enrollmentId, totalCents } = await enrollLearner(db, {
         learnerEmail,
         courseId,
         couponCode: couponCode || undefined,
+      });
+      await logActivity(db, {
+        actorId: locals.user.id,
+        action: ACTIVITY_ACTIONS.enrollmentCreate,
+        targetType: 'enrollment',
+        targetId: enrollmentId,
       });
       return { ok: true, totalCents };
     } catch (err) {

@@ -3,6 +3,8 @@ import type { Actions, PageServerLoad } from './$types';
 import { createDb } from '$lib/server/db';
 import { getLearnerDashboardView } from '$lib/server/dashboard';
 import { recordLessonProgress, ProgressServiceError } from '$lib/server/progress';
+import { logActivity } from '$lib/server/activity';
+import { ACTIONS as ACTIVITY_ACTIONS } from '$lib/domain/activity';
 
 export const load: PageServerLoad = async ({ locals, platform }) => {
   if (!locals.user) {
@@ -39,12 +41,19 @@ export const actions: Actions = {
       return fail(400, { error: 'Paramètres requis' });
     }
 
+    const db = createDb(dbBinding);
     try {
-      await recordLessonProgress(createDb(dbBinding), {
+      await recordLessonProgress(db, {
         learnerId: locals.user.id,
         enrollmentId,
         lessonId,
         status: 'completed',
+      });
+      await logActivity(db, {
+        actorId: locals.user.id,
+        action: ACTIVITY_ACTIONS.progressUpdate,
+        targetType: 'lesson',
+        targetId: lessonId,
       });
       return { ok: true };
     } catch (err) {

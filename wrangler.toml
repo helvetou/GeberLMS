@@ -1,9 +1,14 @@
-# Configuration Cloudflare (Workers + D1).
+# Configuration Cloudflare (Workers + static assets + D1).
 # Le `database_id` est un placeholder : à remplacer par la sortie de
 # `wrangler d1 create geberlms` avant le premier déploiement distant.
 
 name = "geberlms"
 compatibility_date = "2025-06-01"
+compatibility_flags = ["nodejs_compat"]
+main = ".svelte-kit/cloudflare/_worker.js"
+
+[assets]
+directory = ".svelte-kit/cloudflare"
 
 [[d1_databases]]
 binding = "DB"

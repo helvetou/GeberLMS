@@ -30,6 +30,7 @@ npm run typecheck  # typage de la logique métier (tsc)
 npx wrangler d1 execute DB --local --file migrations/0001_init.sql
 npx wrangler d1 execute DB --local --file migrations/0002_sessions.sql
 SEED_ADMIN_EMAIL=admin@example.com SEED_ADMIN_PASSWORD=changeme npx tsx scripts/seed-admin.ts
+npx tsx scripts/seed-demo.ts   # données de démo (tuteur/apprenant/cours)
 ```
 
 ## Structure

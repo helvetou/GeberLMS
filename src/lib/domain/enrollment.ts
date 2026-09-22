@@ -96,3 +96,42 @@ export function enrollmentsFundedBy(
 ): Enrollment[] {
   return entries.filter((e) => e.payerId === payerId);
 }
+
+/**
+ * Détermine le payeur unique : l'apprenant lui-même (auto-payeur) ou
+ * son tuteur lié. Lève une erreur si aucun ou plusieurs tuteurs (ambigu).
+ */
+export function resolvePayer(
+  learner: User,
+  guardianships: GuardianshipList,
+): string {
+  if (isSelfPayer(learner)) return learner.id;
+
+  const tutors = tutorsOfLearner(guardianships, learner.id);
+  if (tutors.length === 0) {
+    throw new EnrollmentError('Aucun tuteur lié pour financer cet apprenant');
+  }
+  if (tutors.length > 1) {
+    throw new EnrollmentError('Plusieurs tuteurs liés — payeur ambigu');
+  }
+  return tutors[0]!;
+}
+
+/** Crée une inscription en résolvant automatiquement le payeur. */
+export function createEnrollmentForLearner(opts: {
+  id: string;
+  learner: User;
+  courseId: string;
+  guardianships: GuardianshipList;
+  status?: EnrollmentStatus;
+}): Enrollment {
+  const payerId = resolvePayer(opts.learner, opts.guardianships);
+  return createEnrollment({
+    id: opts.id,
+    learner: opts.learner,
+    courseId: opts.courseId,
+    payerId,
+    guardianships: opts.guardianships,
+    status: opts.status,
+  });
+}

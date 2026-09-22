@@ -42,6 +42,7 @@ export const courses = sqliteTable('courses', {
   title: text('title').notNull(),
   language: text('language', { enum: ['fr', 'en', 'ar', 'de'] }).notNull(),
   visibility: text('visibility', { enum: ['visible', 'hidden'] }).notNull().default('visible'),
+  priceCents: integer('price_cents').notNull().default(0),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),
 });

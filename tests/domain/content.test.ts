@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { isLanguage, isContentType, LANGUAGES, CONTENT_TYPES } from '../../src/lib/domain/content';
+import {
+  isLanguage,
+  isContentType,
+  isVisibility,
+  LANGUAGES,
+  CONTENT_TYPES,
+  VISIBILITIES,
+} from '../../src/lib/domain/content';
 
 describe('content — langues (FR-14)', () => {
   it('accepts the four supported languages', () => {
@@ -30,5 +37,22 @@ describe('content — types (FR-13)', () => {
     for (const t of ['audio', 'pdf', '']) {
       expect(isContentType(t), t).toBe(false);
     }
+  });
+});
+
+describe('content — visibilité (FR-12)', () => {
+  it('accepts visible and hidden', () => {
+    expect(isVisibility('visible')).toBe(true);
+    expect(isVisibility('hidden')).toBe(true);
+  });
+
+  it('rejects unknown values', () => {
+    for (const v of ['draft', 'public', '']) {
+      expect(isVisibility(v), v).toBe(false);
+    }
+  });
+
+  it('exposes exactly two visibilities', () => {
+    expect(VISIBILITIES).toEqual(['visible', 'hidden']);
   });
 });

@@ -12,6 +12,7 @@ export interface Course {
   title: string;
   language: Language;
   visibility: Visibility;
+  priceCents?: number;
 }
 
 export interface Module {
@@ -19,6 +20,7 @@ export interface Module {
   courseId: string;
   title: string;
   visibility: Visibility;
+  position?: number;
 }
 
 export interface Lesson {
@@ -27,6 +29,7 @@ export interface Lesson {
   title: string;
   type: ContentType;
   visibility: Visibility;
+  position?: number;
 }
 
 export interface Resource {
@@ -145,6 +148,100 @@ export function removeLesson(catalog: Catalog, id: string): Catalog {
 
 export function removeResource(catalog: Catalog, id: string): Catalog {
   return { ...catalog, resources: catalog.resources.filter((r) => r.id !== id) };
+}
+
+export interface CourseNode {
+  course: Course;
+  modules: ModuleNode[];
+}
+
+export interface ModuleNode {
+  module: Module;
+  lessons: LessonNode[];
+}
+
+export interface LessonNode {
+  lesson: Lesson;
+  resources: Resource[];
+}
+
+function byPosition<T extends { position?: number }>(a: T, b: T): number {
+  return (a.position ?? 0) - (b.position ?? 0);
+}
+
+/**
+ * Vue arborescente du catalogue pour l'admin (FR-10) : cours → modules →
+ * leçons → ressources, incluant les éléments cachés, ordonnés par position.
+ */
+export function nestCatalog(catalog: Catalog): CourseNode[] {
+  return [...catalog.courses]
+    .sort((a, b) => a.title.localeCompare(b.title))
+    .map((course) => {
+      const modules: ModuleNode[] = [...modulesOfCourse(catalog, course.id)]
+        .sort(byPosition)
+        .map((module) => {
+          const lessons: LessonNode[] = [...lessonsOfModule(catalog, module.id)]
+            .sort(byPosition)
+            .map((lesson) => ({
+              lesson,
+              resources: [...resourcesOfLesson(catalog, lesson.id)].sort((a, b) =>
+                a.title.localeCompare(b.title),
+              ),
+            }));
+          return { module, lessons };
+        });
+      return { course, modules };
+    });
+}
+
+function assertTitle(title: string): void {
+  if (!title.trim()) {
+    throw new CatalogError('Titre requis');
+  }
+}
+
+export function renameCourse(catalog: Catalog, id: string, title: string): Catalog {
+  assertTitle(title);
+  if (!catalog.courses.some((c) => c.id === id)) {
+    throw new CatalogError('Cours introuvable');
+  }
+  return {
+    ...catalog,
+    courses: catalog.courses.map((c) => (c.id === id ? { ...c, title } : c)),
+  };
+}
+
+export function renameModule(catalog: Catalog, id: string, title: string): Catalog {
+  assertTitle(title);
+  if (!catalog.modules.some((m) => m.id === id)) {
+    throw new CatalogError('Module introuvable');
+  }
+  return {
+    ...catalog,
+    modules: catalog.modules.map((m) => (m.id === id ? { ...m, title } : m)),
+  };
+}
+
+export function renameLesson(catalog: Catalog, id: string, title: string): Catalog {
+  assertTitle(title);
+  if (!catalog.lessons.some((l) => l.id === id)) {
+    throw new CatalogError('Leçon introuvable');
+  }
+  return {
+    ...catalog,
+    lessons: catalog.lessons.map((l) => (l.id === id ? { ...l, title } : l)),
+  };
+}
+
+export function renameResource(catalog: Catalog, id: string, title: string): Catalog {
+  assertTitle(title);
+  if (!catalog.resources.some((r) => r.id === id)) {
+    throw new CatalogError('Ressource introuvable');
+  }
+  return {
+    ...catalog,
+    resources: catalog.resources.map((r) => (r.id === id ? { ...r, title } : r)),
+  };
 }
 
 export function modulesOfCourse(catalog: Catalog, courseId: string): Module[] {

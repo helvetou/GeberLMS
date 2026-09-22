@@ -16,6 +16,11 @@ import {
   lessonsOfModule,
   resourcesOfLesson,
   visibleLessonsOfCourse,
+  nestCatalog,
+  renameCourse,
+  renameModule,
+  renameLesson,
+  renameResource,
   type Catalog,
   type Course,
   type Module,
@@ -163,5 +168,78 @@ describe('requêtes', () => {
 
   it('lists only visible lessons of a course', () => {
     expect(visibleLessonsOfCourse(cat, 'c1').map((l) => l.id)).toEqual(['l1']);
+  });
+});
+
+describe('nestCatalog (FR-10)', () => {
+  const cat: Catalog = {
+    courses: [
+      { id: 'c1', slug: 'fr', title: 'Français', language: 'fr', visibility: 'visible' },
+      { id: 'c2', slug: 'de', title: 'Allemand', language: 'de', visibility: 'hidden' },
+    ],
+    modules: [
+      { id: 'm2', courseId: 'c1', title: 'Module 2', visibility: 'visible', position: 1 },
+      { id: 'm1', courseId: 'c1', title: 'Module 1', visibility: 'hidden', position: 0 },
+    ],
+    lessons: [
+      { id: 'l2', moduleId: 'm1', title: 'Leçon 2', type: 'text', visibility: 'visible', position: 1 },
+      { id: 'l1', moduleId: 'm1', title: 'Leçon 1', type: 'video', visibility: 'visible', position: 0 },
+    ],
+    resources: [{ id: 'r1', lessonId: 'l1', title: 'Support', visibility: 'visible' }],
+  };
+
+  it('nests modules, lessons and resources under courses', () => {
+    const nodes = nestCatalog(cat);
+    const c1 = nodes.find((n) => n.course.id === 'c1')!;
+    expect(c1.modules.map((m) => m.module.id)).toEqual(['m1', 'm2']);
+
+    const m1 = c1.modules[0]!;
+    expect(m1.lessons.map((l) => l.lesson.id)).toEqual(['l1', 'l2']);
+    expect(m1.lessons[0]!.resources.map((r) => r.id)).toEqual(['r1']);
+  });
+
+  it('includes hidden entities (admin view shows everything)', () => {
+    const nodes = nestCatalog(cat);
+    expect(nodes.find((n) => n.course.id === 'c2')?.course.visibility).toBe('hidden');
+    expect(nodes.find((n) => n.course.id === 'c1')!.modules.find((m) => m.module.id === 'm1')?.module.visibility).toBe('hidden');
+  });
+
+  it('returns an empty list for an empty catalog', () => {
+    expect(nestCatalog(emptyCatalog())).toEqual([]);
+  });
+});
+
+describe('rename (FR-11)', () => {
+  const cat = addCourse(emptyCatalog(), course);
+  const withModule = addModule(cat, module);
+  const withLesson = addLesson(withModule, lesson);
+  const withResource = addResource(withLesson, resource);
+
+  it('renames an existing course', () => {
+    expect(renameCourse(cat, 'c1', 'Nouveau titre').courses[0]?.title).toBe('Nouveau titre');
+  });
+
+  it('rejects renaming a missing course', () => {
+    expect(() => renameCourse(cat, 'nope', 'X')).toThrow(CatalogError);
+  });
+
+  it('rejects an empty title', () => {
+    expect(() => renameCourse(cat, 'c1', '   ')).toThrow(CatalogError);
+  });
+
+  it('renames a module', () => {
+    expect(renameModule(withModule, 'm1', 'Module renommé').modules[0]?.title).toBe('Module renommé');
+  });
+
+  it('rejects renaming a missing module', () => {
+    expect(() => renameModule(withModule, 'nope', 'X')).toThrow(CatalogError);
+  });
+
+  it('renames a lesson', () => {
+    expect(renameLesson(withLesson, 'l1', 'Leçon renommée').lessons[0]?.title).toBe('Leçon renommée');
+  });
+
+  it('renames a resource', () => {
+    expect(renameResource(withResource, 'r1', 'Ressource renommée').resources[0]?.title).toBe('Ressource renommée');
   });
 });

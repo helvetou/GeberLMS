@@ -21,3 +21,12 @@ binding = "ASSETS"
 binding = "DB"
 database_name = "geberlms"
 database_id = "86f0ff10-8006-4a8c-b467-d2585c602386"
+
+# Stockage des dépôts apprenants (FR-24).
+[[r2_buckets]]
+binding = "FILES"
+bucket_name = "geberlms-files"
+
+# Génération de quiz par LLM (FR-31) — Workers AI.
+[ai]
+binding = "AI"

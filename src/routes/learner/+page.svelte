@@ -1,6 +1,14 @@
 <script lang="ts">
   import type { PageProps } from './$types';
   let { data, form }: PageProps = $props();
+
+  const lessons = $derived(
+    data.view
+      ? data.view.courses.flatMap((c) =>
+          c.lessons.map((l) => ({ lessonId: l.lessonId, title: l.title, courseTitle: c.title })),
+        )
+      : [],
+  );
 </script>
 
 <svelte:head>
@@ -55,6 +63,31 @@
       {/each}
     </ul>
   {/if}
+
+  <h2>Mes documents</h2>
+  <form method="POST" action="?/upload" enctype="multipart/form-data">
+    <label>Fichier <input type="file" name="file" required /></label>
+    <label>
+      Leçon (optionnel)
+      <select name="lessonId">
+        <option value="">— aucune —</option>
+        {#each lessons as l (l.lessonId)}
+          <option value={l.lessonId}>{l.courseTitle} — {l.title}</option>
+        {/each}
+      </select>
+    </label>
+    <button type="submit">Déposer</button>
+  </form>
+
+  {#if (data.uploads ?? []).length === 0}
+    <p><em>Aucun document déposé.</em></p>
+  {:else}
+    <ul>
+      {#each data.uploads as u (u.id)}
+        <li>{u.filename ?? u.r2Key} — {u.createdAt}</li>
+      {/each}
+    </ul>
+  {/if}
 {:else}
   <p role="alert">{data.error}</p>
 {/if}
@@ -68,6 +101,8 @@
     Quiz corrigé : {form.quizResult.correct}/{form.quizResult.total} bonnes réponses
     — {form.quizResult.percentage} %.
   </p>
+{:else if form?.ok && form.uploaded}
+  <p role="status">Document déposé.</p>
 {:else if form?.ok}
   <p role="status">Progression enregistrée.</p>
 {/if}

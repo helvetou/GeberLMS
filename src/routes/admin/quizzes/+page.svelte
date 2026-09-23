@@ -17,11 +17,22 @@
   <p role="alert">{form.error}</p>
 {/if}
 
+{#if form?.ok && form.created !== undefined}
+  <p role="status">{form.created} question(s) générée(s).</p>
+{/if}
+
 {#if data.lessons.length === 0}
   <p>Aucune leçon de type quiz.</p>
 {:else}
   {#each data.lessons as lesson (lesson.lessonId)}
     <h2>{lesson.title} <small>({lesson.courseTitle} — {lesson.moduleTitle})</small></h2>
+
+    <form method="POST" action="?/generate">
+      <input type="hidden" name="lessonId" value={lesson.lessonId} />
+      <label>Sujet <input type="text" name="topic" required /></label>
+      <label>Nombre <input type="number" name="count" min="1" max="20" value="5" style="width: 4em" /></label>
+      <button type="submit">Générer (IA)</button>
+    </form>
 
     <details>
       <summary>Ajouter une question</summary>

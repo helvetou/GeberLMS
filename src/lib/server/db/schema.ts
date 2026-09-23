@@ -157,6 +157,18 @@ export const quizQuestions = sqliteTable('quiz_questions', {
   createdAt: text('created_at').notNull(),
 });
 
+export const uploads = sqliteTable('uploads', {
+  id: text('id').primaryKey(),
+  learnerId: text('learner_id')
+    .notNull()
+    .references(() => users.id),
+  lessonId: text('lesson_id').references(() => lessons.id),
+  r2Key: text('r2_key').notNull(),
+  filename: text('filename'),
+  contentType: text('content_type'),
+  createdAt: text('created_at').notNull(),
+});
+
 export type UserRow = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type SessionRow = typeof sessions.$inferSelect;

@@ -22,6 +22,7 @@ export const ACTIONS = {
   logout: 'auth.logout',
   enrollmentCreate: 'enrollment.create',
   progressUpdate: 'progress.update',
+  uploadCreate: 'upload.create',
 } as const;
 
 export class ActivityError extends Error {

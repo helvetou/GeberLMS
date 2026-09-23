@@ -80,7 +80,9 @@ Chaque exigence est reliée à son implémentation et à ses tests. Extrait init
 | FR-21 | `src/lib/domain/dashboard.ts` | `tests/domain/dashboard.test.ts` |
 | FR-22 | `src/lib/domain/dashboard.ts` | `tests/domain/dashboard.test.ts` |
 | FR-23 | `src/lib/domain/activity.ts` | `tests/domain/activity.test.ts` |
+| FR-24 | `src/lib/domain/upload.ts` | `tests/domain/upload.test.ts` |
 | FR-30 | `src/lib/domain/quiz.ts` | `tests/domain/quiz.test.ts` |
+| FR-31 | `src/lib/domain/quiz.ts` | `tests/domain/quiz.test.ts` |
 
 La matrice complète est tenue à jour à chaque ajout d'exigence.
 

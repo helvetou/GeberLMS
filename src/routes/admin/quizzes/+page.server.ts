@@ -5,7 +5,9 @@ import {
   listQuizLessons,
   createQuizQuestion,
   deleteQuizQuestion,
+  generateQuizQuestions,
   QuizServiceError,
+  type QuizLlm,
 } from '$lib/server/quiz';
 
 export const load: PageServerLoad = async ({ locals, platform }) => {
@@ -58,5 +60,41 @@ export const actions: Actions = {
       throw err;
     }
     throw redirect(303, '/admin/quizzes');
+  },
+
+  generate: async ({ request, locals, platform }) => {
+    if (locals.user?.role !== 'admin') return fail(403, { error: 'Accès refusé' });
+    const dbBinding = platform?.env?.DB;
+    const aiBinding = platform?.env?.AI;
+    if (!dbBinding || !aiBinding) return fail(503, { error: 'Service d\u2019IA indisponible' });
+
+    const data = await request.formData();
+    const lessonId = String(data.get('lessonId') ?? '');
+    const topic = String(data.get('topic') ?? '');
+    const count = Number(data.get('count') ?? '5');
+
+    const ai = aiBinding as unknown as {
+      run: (model: string, inputs: unknown) => Promise<{ response?: string }>;
+    };
+    const llm: QuizLlm = {
+      generate: async (prompt) => {
+        const res = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
+          messages: [{ role: 'user', content: prompt }],
+        });
+        return res.response ?? '';
+      },
+    };
+
+    try {
+      const created = await generateQuizQuestions(createDb(dbBinding), llm, {
+        lessonId,
+        topic,
+        count,
+      });
+      return { ok: true, created };
+    } catch (err) {
+      if (err instanceof QuizServiceError) return fail(400, { error: err.message });
+      throw err;
+    }
   },
 };

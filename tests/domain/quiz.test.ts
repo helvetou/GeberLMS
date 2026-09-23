@@ -2,6 +2,8 @@ import { describe, it, expect } from 'vitest';
 import {
   validateQuizQuestion,
   gradeQuiz,
+  parseGeneratedQuiz,
+  buildQuizPrompt,
   QuizError,
   type QuizQuestion,
   type AnswerSelection,
@@ -75,5 +77,48 @@ describe('gradeQuiz (FR-30)', () => {
 
   it('returns zero for an empty quiz', () => {
     expect(gradeQuiz([], [])).toEqual({ correct: 0, total: 0, score: 0, maxScore: 0, percentage: 0 });
+  });
+});
+
+describe('parseGeneratedQuiz (FR-31)', () => {
+  it('parses a plain JSON array', () => {
+    const raw = '[{"prompt":"Capital of France?","choices":["Paris","Berlin"],"correctIndex":0}]';
+    expect(parseGeneratedQuiz(raw)).toEqual([
+      { prompt: 'Capital of France?', choices: ['Paris', 'Berlin'], correctIndex: 0 },
+    ]);
+  });
+
+  it('strips markdown fences', () => {
+    const raw = '```json\n[{"prompt":"2+2?","choices":["3","4"],"correctIndex":1}]\n```';
+    expect(parseGeneratedQuiz(raw)).toHaveLength(1);
+    expect(parseGeneratedQuiz(raw)[0]!.correctIndex).toBe(1);
+  });
+
+  it('extracts an array embedded in prose', () => {
+    const raw = 'Voici les questions :\n[{"prompt":"Q?","choices":["A","B"],"correctIndex":0}]\nBonne chance !';
+    expect(parseGeneratedQuiz(raw)).toHaveLength(1);
+  });
+
+  it('rejects invalid JSON', () => {
+    expect(() => parseGeneratedQuiz('not json at all')).toThrow(QuizError);
+  });
+
+  it('rejects a non-array JSON value', () => {
+    expect(() => parseGeneratedQuiz('{"prompt":"x"}')).toThrow(QuizError);
+  });
+
+  it('rejects a question with an out-of-bounds correct index', () => {
+    const raw = '[{"prompt":"Q?","choices":["A"],"correctIndex":5}]';
+    expect(() => parseGeneratedQuiz(raw)).toThrow(QuizError);
+  });
+});
+
+describe('buildQuizPrompt (FR-31)', () => {
+  it('includes the topic, the count and the JSON format', () => {
+    const p = buildQuizPrompt('Le subjonctif', 3);
+    expect(p).toContain('Le subjonctif');
+    expect(p).toContain('3');
+    expect(p).toContain('JSON');
+    expect(p).toContain('correctIndex');
   });
 });

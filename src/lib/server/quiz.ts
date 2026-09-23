@@ -4,6 +4,8 @@ import { lessons, modules, courses, quizQuestions } from './db/schema';
 import {
   gradeQuiz,
   validateQuizQuestion,
+  buildQuizPrompt,
+  parseGeneratedQuiz,
   type AnswerSelection,
   type QuizQuestion,
   type QuizResult,
@@ -161,4 +163,48 @@ export async function gradeQuizForLesson(
   });
 
   return result;
+}
+
+/** Abstraction minimale d'un LLM de génération de questions. */
+export interface QuizLlm {
+  generate(prompt: string): Promise<string>;
+}
+
+/**
+ * Génère des questions de quiz via un LLM, parse/valide la réponse et
+ * les enregistre (FR-31).
+ */
+export async function generateQuizQuestions(
+  db: DB,
+  llm: QuizLlm,
+  input: { lessonId: string; topic: string; count: number },
+): Promise<number> {
+  const lesson = await db
+    .select({ id: lessons.id, type: lessons.type })
+    .from(lessons)
+    .where(eq(lessons.id, input.lessonId))
+    .get();
+  if (!lesson) {
+    throw new QuizServiceError('Leçon introuvable');
+  }
+  if (lesson.type !== 'quiz') {
+    throw new QuizServiceError('Cette leçon n\u2019est pas un quiz');
+  }
+  if (!input.topic.trim()) {
+    throw new QuizServiceError('Sujet requis');
+  }
+
+  const raw = await llm.generate(buildQuizPrompt(input.topic, input.count));
+  const questions = parseGeneratedQuiz(raw);
+
+  for (const q of questions) {
+    await createQuizQuestion(db, {
+      lessonId: input.lessonId,
+      prompt: q.prompt,
+      choices: q.choices,
+      correctIndex: q.correctIndex,
+    });
+  }
+
+  return questions.length;
 }

@@ -45,6 +45,7 @@ Le build SvelteKit doit **obligatoirement** tourner avant `wrangler deploy`
    npx wrangler d1 create geberlms
    # copier le database_id renvoyé dans wrangler.toml (remplacer le placeholder)
    for f in migrations/*.sql; do npx wrangler d1 execute geberlms --remote --file "$f"; done
+   SEED_ADMIN_EMAIL=admin@example.com SEED_ADMIN_PASSWORD=changeme npx tsx scripts/seed-admin.ts --remote
    ```
 3. **Déploiement** :
    ```bash

@@ -1,9 +1,9 @@
 /**
- * Seed de démonstration dans la D1 locale : un tuteur, un apprenant financé,
- * un cours, une leçon, une inscription et une progression.
+ * Seed de démonstration dans la D1 (locale par défaut, distante avec --remote).
  *
  * Usage :
- *   npx tsx scripts/seed-demo.ts
+ *   npx tsx scripts/seed-demo.ts            # locale
+ *   npx tsx scripts/seed-demo.ts --remote   # distante (D1 « geberlms »)
  *   # mot de passe tuteur : SEED_DEMO_TUTOR_PASSWORD (défaut DemoTutor123!)
  */
 import { execFileSync } from 'node:child_process';
@@ -57,13 +57,17 @@ VALUES ('demo-progress', 'demo-enroll', 'demo-lesson', 'completed', '${now}');
   const file = join(dir, 'seed.sql');
   writeFileSync(file, sql);
 
-  execFileSync('npx', ['wrangler', 'd1', 'execute', 'DB', '--local', '--file', file], {
+  const remote = process.argv.includes('--remote');
+  const target = remote ? 'geberlms' : 'DB';
+  const mode = remote ? '--remote' : '--local';
+
+  execFileSync('npx', ['wrangler', 'd1', 'execute', target, mode, '--file', file], {
     stdio: 'inherit',
     cwd: process.cwd(),
   });
 
   console.log(
-    `Demo seedée. Tuteur : tutor@demo.ee / ${password} · Apprenant : learner@demo.ee / ${learnerPassword}`,
+    `Demo seedée${remote ? ' (distant)' : ''}. Tuteur : tutor@demo.ee / ${password} · Apprenant : learner@demo.ee / ${learnerPassword}`,
   );
 }
 

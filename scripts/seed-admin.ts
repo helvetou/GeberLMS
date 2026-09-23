@@ -1,9 +1,11 @@
 /**
- * Seed du premier admin dans la D1 locale.
+ * Seed du premier admin dans la D1 (locale par défaut, distante avec --remote).
  *
  * Usage :
  *   SEED_ADMIN_EMAIL=admin@example.com SEED_ADMIN_PASSWORD=changeme \
- *     npx tsx scripts/seed-admin.ts
+ *     npx tsx scripts/seed-admin.ts            # locale
+ *   SEED_ADMIN_EMAIL=… SEED_ADMIN_PASSWORD=… \
+ *     npx tsx scripts/seed-admin.ts --remote   # distante (D1 « geberlms »)
  *
  * Réutilise le hachage du domaine (src/lib/domain/password.ts).
  */
@@ -38,12 +40,16 @@ async function main(): Promise<void> {
   const file = join(dir, 'seed.sql');
   writeFileSync(file, sql + '\n');
 
-  execFileSync('npx', ['wrangler', 'd1', 'execute', 'DB', '--local', '--file', file], {
+  const remote = process.argv.includes('--remote');
+  const target = remote ? 'geberlms' : 'DB';
+  const mode = remote ? '--remote' : '--local';
+
+  execFileSync('npx', ['wrangler', 'd1', 'execute', target, mode, '--file', file], {
     stdio: 'inherit',
     cwd: process.cwd(),
   });
 
-  console.log(`Admin seedé : ${email} (id ${id})`);
+  console.log(`Admin seedé${remote ? ' (distant)' : ''} : ${email} (id ${id})`);
 }
 
 function escapeSql(value: string): string {

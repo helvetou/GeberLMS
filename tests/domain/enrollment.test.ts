@@ -5,6 +5,7 @@ import {
   enroll,
   enrollmentsOfLearner,
   enrollmentsFundedBy,
+  activateEnrollment,
   type Enrollment,
 } from '../../src/lib/domain/enrollment';
 import type { User } from '../../src/lib/domain/user';
@@ -140,5 +141,23 @@ describe('requêtes', () => {
 
   it('lists enrollments funded by a payer', () => {
     expect(enrollmentsFundedBy(entries, 't1').map((e) => e.id)).toEqual(['e3']);
+  });
+});
+
+describe('activateEnrollment (FR-41)', () => {
+  it('activates a pending enrollment', () => {
+    const e = activateEnrollment({ id: 'e1', learnerId: 'l1', courseId: 'c1', payerId: 'l1', status: 'pending' });
+    expect(e.status).toBe('active');
+  });
+
+  it('is idempotent for an active enrollment', () => {
+    const e = activateEnrollment({ id: 'e1', learnerId: 'l1', courseId: 'c1', payerId: 'l1', status: 'active' });
+    expect(e.status).toBe('active');
+  });
+
+  it('rejects activating a revoked enrollment', () => {
+    expect(() =>
+      activateEnrollment({ id: 'e1', learnerId: 'l1', courseId: 'c1', payerId: 'l1', status: 'revoked' }),
+    ).toThrow(EnrollmentError);
   });
 });

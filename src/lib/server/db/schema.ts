@@ -169,6 +169,31 @@ export const uploads = sqliteTable('uploads', {
   createdAt: text('created_at').notNull(),
 });
 
+export const payments = sqliteTable('payments', {
+  id: text('id').primaryKey(),
+  enrollmentId: text('enrollment_id').references(() => enrollments.id),
+  provider: text('provider').notNull().default('payoneer'),
+  providerRef: text('provider_ref'),
+  amountCents: integer('amount_cents').notNull(),
+  currency: text('currency').notNull().default('EUR'),
+  status: text('status', { enum: ['pending', 'confirmed', 'failed'] }).notNull().default('pending'),
+  createdAt: text('created_at').notNull(),
+});
+
+export const invoices = sqliteTable('invoices', {
+  id: text('id').primaryKey(),
+  enrollmentId: text('enrollment_id')
+    .notNull()
+    .references(() => enrollments.id),
+  number: text('number').notNull().unique(),
+  pdfRef: text('pdf_ref'),
+  netCents: integer('net_cents').notNull(),
+  vatRatePercent: real('vat_rate_percent').notNull(),
+  vatCents: integer('vat_cents').notNull(),
+  totalCents: integer('total_cents').notNull(),
+  createdAt: text('created_at').notNull(),
+});
+
 export type UserRow = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type SessionRow = typeof sessions.$inferSelect;

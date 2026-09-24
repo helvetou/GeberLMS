@@ -83,6 +83,8 @@ Chaque exigence est reliée à son implémentation et à ses tests. Extrait init
 | FR-24 | `src/lib/domain/upload.ts` | `tests/domain/upload.test.ts` |
 | FR-30 | `src/lib/domain/quiz.ts` | `tests/domain/quiz.test.ts` |
 | FR-31 | `src/lib/domain/quiz.ts` | `tests/domain/quiz.test.ts` |
+| FR-40 / FR-41 | `src/lib/domain/payment.ts`, `enrollment.ts` | `tests/domain/payment.test.ts`, `enrollment.test.ts` |
+| FR-47 | `src/lib/domain/invoice.ts` | `tests/domain/invoice.test.ts` |
 
 La matrice complète est tenue à jour à chaque ajout d'exigence.
 

@@ -97,6 +97,17 @@ export function enrollmentsFundedBy(
   return entries.filter((e) => e.payerId === payerId);
 }
 
+/** Active une inscription après confirmation du paiement (FR-41). */
+export function activateEnrollment(enrollment: Enrollment): Enrollment {
+  if (enrollment.status === 'active') {
+    return enrollment;
+  }
+  if (enrollment.status !== 'pending') {
+    throw new EnrollmentError('Inscription non activable');
+  }
+  return { ...enrollment, status: 'active' };
+}
+
 /**
  * Détermine le payeur unique : l'apprenant lui-même (auto-payeur) ou
  * son tuteur lié. Lève une erreur si aucun ou plusieurs tuteurs (ambigu).

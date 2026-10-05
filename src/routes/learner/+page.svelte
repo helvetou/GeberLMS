@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { useI18n } from '$lib/i18n.svelte';
+  const { t, tStatus } = useI18n();
   import type { PageProps } from './$types';
   let { data, form }: PageProps = $props();
 
@@ -12,24 +14,24 @@
 </script>
 
 <svelte:head>
-  <title>Mes cours — GeberLMS</title>
+  <title>{t('learner.title')} — GeberLMS</title>
 </svelte:head>
 
-<h1>Mes cours</h1>
+<h1>{t('learner.title')}</h1>
 
 {#if data.view}
   {#if data.view.courses.length === 0}
-    <p>Aucun cours inscrit.</p>
+    <p>{t('learner.noCourses')}</p>
   {:else}
     <ul>
       {#each data.view.courses as c (c.courseId)}
         <li>
           <strong>{c.title}</strong>
-          — {c.completedLessons}/{c.totalLessons} leçons ({c.status})
+          — {c.completedLessons}/{c.totalLessons} {t('common.lessons')} ({tStatus(c.status)})
           <ul>
             {#each c.lessons as l (l.lessonId)}
               <li>
-                {l.title} — {l.status}
+                {l.title} — {tStatus(l.status)}
                 {#if l.type === 'quiz'}
                   {#if (data.quizzes[l.lessonId] ?? []).length > 0}
                     <form method="POST" action="?/submitQuiz">
@@ -44,16 +46,16 @@
                           </label>
                         {/each}
                       {/each}
-                      <button type="submit">Valider le quiz</button>
+                      <button type="submit">{t('learner.submitQuiz')}</button>
                     </form>
                   {:else}
-                    <em>Quiz sans question.</em>
+                    <em>{t('learner.emptyQuiz')}</em>
                   {/if}
                 {:else if l.status !== 'completed'}
                   <form method="POST" action="?/complete" style="display: inline">
                     <input type="hidden" name="enrollmentId" value={c.enrollmentId} />
                     <input type="hidden" name="lessonId" value={l.lessonId} />
-                    <button type="submit">Marquer terminée</button>
+                    <button type="submit">{t('learner.markDone')}</button>
                   </form>
                 {/if}
               </li>
@@ -64,23 +66,23 @@
     </ul>
   {/if}
 
-  <h2>Mes documents</h2>
+  <h2>{t('learner.myDocs')}</h2>
   <form method="POST" action="?/upload" enctype="multipart/form-data">
-    <label>Fichier <input type="file" name="file" required /></label>
+    <label>{t('learner.file')} <input type="file" name="file" required /></label>
     <label>
-      Leçon (optionnel)
+      {t('learner.lessonOptional')}
       <select name="lessonId">
-        <option value="">— aucune —</option>
+        <option value="">{t('learner.none')}</option>
         {#each lessons as l (l.lessonId)}
           <option value={l.lessonId}>{l.courseTitle} — {l.title}</option>
         {/each}
       </select>
     </label>
-    <button type="submit">Déposer</button>
+    <button type="submit">{t('learner.upload')}</button>
   </form>
 
   {#if (data.uploads ?? []).length === 0}
-    <p><em>Aucun document déposé.</em></p>
+    <p><em>{t('learner.noDocs')}</em></p>
   {:else}
     <ul>
       {#each data.uploads as u (u.id)}
@@ -98,11 +100,14 @@
 
 {#if form?.ok && form.quizResult}
   <p role="status">
-    Quiz corrigé : {form.quizResult.correct}/{form.quizResult.total} bonnes réponses
-    — {form.quizResult.percentage} %.
+    {t('learner.quizResult', {
+      correct: form.quizResult.correct,
+      total: form.quizResult.total,
+      percentage: form.quizResult.percentage,
+    })}
   </p>
 {:else if form?.ok && form.uploaded}
-  <p role="status">Document déposé.</p>
+  <p role="status">{t('learner.uploaded')}</p>
 {:else if form?.ok}
-  <p role="status">Progression enregistrée.</p>
+  <p role="status">{t('learner.progressSaved')}</p>
 {/if}

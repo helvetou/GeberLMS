@@ -1,4 +1,5 @@
 import type { D1Database, R2Bucket, Ai } from '@cloudflare/workers-types';
+import type { Locale } from '$lib/domain/i18n';
 
 declare global {
   namespace App {
@@ -10,6 +11,7 @@ declare global {
         name?: string | null;
       };
       sessionToken?: string;
+      locale?: Locale;
     }
     interface Platform {
       env?: {

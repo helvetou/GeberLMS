@@ -1,13 +1,15 @@
 <script lang="ts">
+  import { useI18n } from '$lib/i18n.svelte';
+  const { t, tStatus } = useI18n();
   import type { PageProps } from './$types';
   let { data, form }: PageProps = $props();
 </script>
 
 <svelte:head>
-  <title>Paiements — GeberLMS</title>
+  <title>{t('payments.title')} — GeberLMS</title>
 </svelte:head>
 
-<h1>Inscriptions & paiements</h1>
+<h1>{t('payments.title')}</h1>
 
 {#if data.error}
   <p role="alert">{data.error}</p>
@@ -18,11 +20,11 @@
 {/if}
 
 {#if form?.ok && form.invoiceNumber}
-  <p role="status">Paiement confirmé — facture {form.invoiceNumber}.</p>
+  <p role="status">{t('payments.confirmed', { number: form.invoiceNumber })}</p>
 {/if}
 
 {#if data.enrollments.length === 0}
-  <p>Aucune inscription.</p>
+  <p>{t('payments.none')}</p>
 {:else}
   <ul>
     {#each data.enrollments as e (e.enrollmentId)}
@@ -30,11 +32,11 @@
         <strong>{e.learnerName}</strong> ({e.learnerEmail})
         — {e.courseTitle}
         — {e.totalCents / 100} €
-        — <em>{e.status}</em>
+        — <em>{tStatus(e.status)}</em>
         {#if e.status === 'pending'}
           <form method="POST" action="?/markPaid" style="display: inline">
             <input type="hidden" name="enrollmentId" value={e.enrollmentId} />
-            <button type="submit">Marquer payé (Payoneer)</button>
+            <button type="submit">{t('payments.markPaid')}</button>
           </form>
         {/if}
       </li>

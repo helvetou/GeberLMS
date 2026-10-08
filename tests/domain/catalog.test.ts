@@ -8,6 +8,7 @@ import {
   addResource,
   setResourceVisibility,
   setModuleVisibility,
+  setCoursePublic,
   removeCourse,
   removeModule,
   removeLesson,
@@ -16,6 +17,7 @@ import {
   lessonsOfModule,
   resourcesOfLesson,
   visibleLessonsOfCourse,
+  publicCourses,
   nestCatalog,
   renameCourse,
   renameModule,
@@ -105,6 +107,44 @@ describe('visibilité (FR-12)', () => {
   it('hiding a module removes its lessons from the visible view', () => {
     const hidden = setModuleVisibility(cat, 'm1', 'hidden');
     expect(visibleLessonsOfCourse(hidden, 'c1')).toEqual([]);
+  });
+});
+
+describe('catalogue public (FR-catalogue)', () => {
+  const cat: Catalog = {
+    courses: [
+      { id: 'c1', slug: 'public', title: 'Public', language: 'fr', visibility: 'visible', isPublic: true },
+      { id: 'c2', slug: 'membre', title: 'Membre', language: 'fr', visibility: 'visible', isPublic: false },
+      { id: 'c3', slug: 'cache', title: 'Caché', language: 'fr', visibility: 'hidden', isPublic: true },
+    ],
+    modules: [],
+    lessons: [],
+    resources: [],
+  };
+
+  it('ne liste que les cours visibles ET publics', () => {
+    expect(publicCourses(cat).map((c) => c.id)).toEqual(['c1']);
+  });
+
+  it('exclut un cours visible mais non public', () => {
+    expect(publicCourses(cat).map((c) => c.id)).not.toContain('c2');
+  });
+
+  it('exclut un cours public mais caché (visibility = hidden)', () => {
+    expect(publicCourses(cat).map((c) => c.id)).not.toContain('c3');
+  });
+});
+
+describe('setCoursePublic (FR-catalogue)', () => {
+  const cat = addCourse(emptyCatalog(), course);
+
+  it('marque un cours comme public', () => {
+    expect(setCoursePublic(cat, 'c1', true).courses[0]?.isPublic).toBe(true);
+  });
+
+  it('retire le statut public (réversible)', () => {
+    const marked = setCoursePublic(cat, 'c1', true);
+    expect(setCoursePublic(marked, 'c1', false).courses[0]?.isPublic).toBe(false);
   });
 });
 

@@ -13,6 +13,12 @@ export interface Course {
   language: Language;
   visibility: Visibility;
   priceCents?: number;
+  description?: string | null;
+  coverImage?: string | null;
+  category?: string | null;
+  level?: string | null;
+  isPublic?: boolean;
+  tutorId?: string | null;
 }
 
 export interface Module {
@@ -102,6 +108,10 @@ export function addResource(catalog: Catalog, resource: Resource): Catalog {
 
 export function setCourseVisibility(catalog: Catalog, id: string, v: Visibility): Catalog {
   return { ...catalog, courses: catalog.courses.map((c) => (c.id === id ? { ...c, visibility: v } : c)) };
+}
+
+export function setCoursePublic(catalog: Catalog, id: string, isPublic: boolean): Catalog {
+  return { ...catalog, courses: catalog.courses.map((c) => (c.id === id ? { ...c, isPublic } : c)) };
 }
 
 export function setModuleVisibility(catalog: Catalog, id: string, v: Visibility): Catalog {
@@ -266,4 +276,9 @@ export function visibleLessonsOfCourse(catalog: Catalog, courseId: string): Less
   return catalog.lessons.filter(
     (l) => visibleModuleIds.has(l.moduleId) && l.visibility === 'visible',
   );
+}
+
+/** Cours du catalogue public (anonyme) : visibles ET marqués publics (FR-catalogue). */
+export function publicCourses(catalog: Catalog): Course[] {
+  return catalog.courses.filter((c) => c.visibility === 'visible' && c.isPublic === true);
 }

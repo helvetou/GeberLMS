@@ -37,8 +37,8 @@ VALUES ('demo-learner', 'learner', 0, 'learner@demo.ee', 'Élève Démo', 'fr', 
 INSERT INTO guardianships (tutor_id, learner_id, created_at)
 VALUES ('demo-tutor', 'demo-learner', '${now}');
 
-INSERT INTO courses (id, slug, title, language, visibility, price_cents, created_at, updated_at)
-VALUES ('demo-course', 'fr-demo', 'Français débutant', 'fr', 'visible', 10000, '${now}', '${now}');
+INSERT INTO courses (id, slug, title, language, visibility, price_cents, description, cover_image, category, level, is_public, tutor_id, created_at, updated_at)
+VALUES ('demo-course', 'fr-demo', 'Français débutant', 'fr', 'visible', 10000, 'Cours de démonstration pour apprendre le français.', NULL, 'langues', 'debutant', 1, 'demo-tutor', '${now}', '${now}');
 
 INSERT INTO modules (id, course_id, position, title, visibility, created_at)
 VALUES ('demo-module', 'demo-course', 0, 'Module 1', 'visible', '${now}');

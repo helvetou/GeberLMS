@@ -2,7 +2,7 @@ import { and, eq, inArray } from 'drizzle-orm';
 import type { DB } from './db';
 import { courses, modules, lessons, resources, enrollments, progress } from './db/schema';
 import { isContentType, isLanguage, isVisibility, type Visibility } from '$lib/domain/content';
-import { nestCatalog, type CourseNode } from '$lib/domain/catalog';
+import { nestCatalog, publicCourses, type Course, type CourseNode } from '$lib/domain/catalog';
 
 export class CatalogServiceError extends Error {
   constructor(message: string) {
@@ -59,9 +59,22 @@ export function listAdminCatalog(db: DB): Promise<CourseNode[]> {
 
 // ─── Cours ────────────────────────────────────────────────────────────────
 
+export interface CreateCourseInput {
+  title: string;
+  slug: string;
+  language: string;
+  priceCents: string;
+  description?: string;
+  coverImage?: string;
+  category?: string;
+  level?: string;
+  isPublic?: boolean;
+  tutorId?: string;
+}
+
 export async function createCourse(
   db: DB,
-  input: { title: string; slug: string; language: string; priceCents: string },
+  input: CreateCourseInput,
 ): Promise<string> {
   const title = assertNonEmpty(input.title, 'Titre');
   const slug = assertNonEmpty(input.slug, 'Slug');
@@ -83,6 +96,12 @@ export async function createCourse(
     title,
     language: input.language as 'fr' | 'en' | 'ar' | 'de',
     priceCents,
+    description: input.description?.trim() || null,
+    coverImage: input.coverImage?.trim() || null,
+    category: input.category?.trim() || null,
+    level: input.level?.trim() || null,
+    isPublic: input.isPublic === true,
+    tutorId: input.tutorId?.trim() || null,
     createdAt: t,
     updatedAt: t,
   });
@@ -105,6 +124,22 @@ export async function setCourseVisibility(db: DB, id: string, visibility: string
     .set({ visibility: visibility as Visibility, updatedAt: now() })
     .where(eq(courses.id, id))
     .run();
+}
+
+export async function setCoursePublic(db: DB, id: string, isPublic: boolean): Promise<void> {
+  const row = await db.select({ id: courses.id }).from(courses).where(eq(courses.id, id)).get();
+  if (!row) throw new CatalogServiceError('Cours introuvable');
+  await db
+    .update(courses)
+    .set({ isPublic, updatedAt: now() })
+    .where(eq(courses.id, id))
+    .run();
+}
+
+/** Cours listés dans le catalogue public (anonyme) : visibles ET publics. */
+export async function listPublicCatalog(db: DB): Promise<Course[]> {
+  const courseRows = await db.select().from(courses).all();
+  return publicCourses({ courses: courseRows, modules: [], lessons: [], resources: [] });
 }
 
 export async function deleteCourse(db: DB, id: string): Promise<void> {

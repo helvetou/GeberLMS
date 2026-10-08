@@ -2,6 +2,7 @@
   import { initI18n } from '$lib/i18n.svelte';
   import { LOCALES } from '$lib/domain/i18n';
   import type { LayoutProps } from './$types';
+  import '../app.css';
 
   let { data, children }: LayoutProps = $props();
 

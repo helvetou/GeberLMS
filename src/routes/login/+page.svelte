@@ -1,8 +1,15 @@
 <script lang="ts">
   import { useI18n } from '$lib/i18n.svelte';
   import LangSwitch from '$lib/components/layout/lang-switch.svelte';
-  const { t } = useI18n();
+  import { Button } from '$lib/components/ui/button/index.js';
+  import * as Card from '$lib/components/ui/card/index.js';
+  import * as Alert from '$lib/components/ui/alert/index.js';
+  import { Input } from '$lib/components/ui/input/index.js';
+  import { Label } from '$lib/components/ui/label/index.js';
+  import TriangleAlertIcon from '@lucide/svelte/icons/triangle-alert';
   import type { PageProps } from './$types';
+
+  const { t } = useI18n();
   let { form }: PageProps = $props();
 </script>
 
@@ -10,41 +17,52 @@
   <title>{t('login.title')} — GeberLMS</title>
 </svelte:head>
 
-<header class="flex h-14 items-center justify-between border-b px-4">
-  <a href="/" class="font-display text-lg font-semibold">{t('brand.name')}</a>
-  <LangSwitch />
-</header>
+<div class="flex min-h-svh flex-col bg-muted/40">
+  <header class="flex h-14 items-center justify-between border-b bg-background px-4">
+    <a href="/" class="font-display text-lg font-semibold">{t('brand.name')}</a>
+    <LangSwitch />
+  </header>
 
-<main class="mx-auto flex w-full max-w-sm flex-col gap-4 px-4 py-12">
-  <h1 class="text-2xl font-semibold">{t('login.title')}</h1>
+  <main class="flex flex-1 items-center justify-center p-4">
+    <Card.Root class="w-full max-w-sm">
+      <Card.Header class="text-center">
+        <Card.Title class="text-2xl">{t('login.title')}</Card.Title>
+        <Card.Description>{t('login.subtitle')}</Card.Description>
+      </Card.Header>
+      <Card.Content>
+        <form method="POST" class="flex flex-col gap-4">
+          <div class="flex flex-col gap-2">
+            <Label for="email">{t('common.email')}</Label>
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              autocomplete="username"
+              placeholder="email@example.com"
+              required
+            />
+          </div>
+          <div class="flex flex-col gap-2">
+            <Label for="password">{t('common.password')}</Label>
+            <Input
+              id="password"
+              name="password"
+              type="password"
+              autocomplete="current-password"
+              required
+            />
+          </div>
 
-  <form method="POST" class="flex flex-col gap-3">
-    <label class="flex flex-col gap-1 text-sm">
-      {t('common.email')}
-      <input
-        type="email"
-        name="email"
-        autocomplete="username"
-        required
-        class="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
-      />
-    </label>
-    <label class="flex flex-col gap-1 text-sm">
-      {t('common.password')}
-      <input
-        type="password"
-        name="password"
-        autocomplete="current-password"
-        required
-        class="h-9 rounded-md border border-input bg-transparent px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/50"
-      />
-    </label>
-    <button type="submit" class="h-9 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground">
-      {t('login.submit')}
-    </button>
-  </form>
+          {#if form?.error}
+            <Alert.Root variant="destructive">
+              <TriangleAlertIcon />
+              <Alert.Description>{form.error}</Alert.Description>
+            </Alert.Root>
+          {/if}
 
-  {#if form?.error}
-    <p role="alert" class="text-sm text-destructive">{form.error}</p>
-  {/if}
-</main>
+          <Button type="submit" class="w-full">{t('login.submit')}</Button>
+        </form>
+      </Card.Content>
+    </Card.Root>
+  </main>
+</div>

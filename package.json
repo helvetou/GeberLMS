@@ -14,13 +14,13 @@
     "deploy": "npm run build && npx wrangler deploy",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit",
-    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.app.json"
+    "typecheck": "tsc -p tsconfig.domain.json --noEmit",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.0.0",
     "@internationalized/date": "^3.12.4",
-    "@lucide/svelte": "^1.53.0",
+    "@lucide/svelte": "^1.54.0",
     "@sveltejs/adapter-cloudflare": "^7.0.0",
     "@sveltejs/kit": "^2.0.0",
     "@sveltejs/vite-plugin-svelte": "^5.0.0",
@@ -28,6 +28,9 @@
     "@types/node": "^22.10.0",
     "bits-ui": "^2.19.5",
     "cn": "^0.4.0",
+    "embla-carousel-svelte": "^8.6.0",
+    "layerchart": "^2.6.0",
+    "paneforge": "^1.0.2",
     "shadcn-svelte": "^1.7.0",
     "svelte": "^5.0.0",
     "svelte-check": "^4.7.6",

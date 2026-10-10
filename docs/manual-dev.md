@@ -43,10 +43,27 @@ Ouvrir : **http://localhost:5173**
 ## 5. Vérifications automatiques (optionnel)
 
 ```bash
-npm test          # 206 tests domaine (Vitest)
-npm run check     # svelte-check (typage app + serveur)
-npm run build     # build adapter-cloudflare
+npm test            # 206 tests domaine (Vitest)
+npm run typecheck   # typage de la logique métier pure (tsconfig.domain.json)
+npm run check       # svelte-check (typage app + serveur, tsconfig.json)
+npm run build       # build adapter-cloudflare
 ```
+
+> Note : `tsconfig.json` (racine) étend `.svelte-kit/tsconfig.json` et couvre l'app
+> (Svelte + serveur). `tsconfig.domain.json` couvre uniquement `src/lib/domain` + `tests`.
+
+## 5.1 Frontend — shadcn-svelte + Tailwind v4
+
+- UI construite sur **shadcn-svelte** (primitives `bits-ui`) + **Tailwind CSS v4** (config
+  CSS-first dans `src/app.css` via `@theme` — pas de `tailwind.config.ts`).
+- `components.json` : base `stone`, style `nova`, icônes `lucide`, alias `$lib`.
+- Composants générés dans `src/lib/components/ui/` (38 composants) — ajout :
+  `npx shadcn-svelte@latest add <composant>`.
+- Derniers ajouts : `carousel` (embla-carousel-svelte), `chart` (layerchart),
+  `calendar`, `resizable` (paneforge), `toggle`.
+- Polices : Inter Variable (`--font-sans`) + Sora (`--font-display`) via Fontsource.
+- Thème clair/sombre via `mode-watcher` (variante `.dark`).
+- Layout App Shell (Sidebar + Topbar) dans `src/lib/components/layout/`.
 
 ---
 
@@ -124,8 +141,16 @@ npm run build     # build adapter-cloudflare
 
 ## 8. Limitations connues de la v0.1.0
 
-- Le lien **« Catalogue »** de la sidebar apprenant pointe vers `/catalog`, route **pas encore créée** → 404.
-- Seule la page **login** a le design shadcn « premium » ; les autres pages sont encore l'ancien markup (à l'intérieur du nouveau shell sidebar/topbar).
-- Les champs catalogue ajoutés en base (migration 0006 : description, vignette, catégorie, niveau, visibilité publique, tuteur) ne sont **pas encore exposés** dans l'UI admin.
-- **Non implémenté** : anti-copie (NFR-10), RGPD (NFR-08 : consentement/effacement), suivi budget LLM (NFR-06).
-- La génération de quiz par IA (Workers AI) peut entraîner des coûts et nécessite l'accès au binding `AI`.
+- **Refonte frontend en cours** (blueprint validé 2026-10-09) : catalogue public,
+  lecteur de cours et dashboard apprenant à implémenter sur la base des composants
+  shadcn-svelte générés (38 composants, dont carousel/chart/calendar/resizable/toggle).
+- Le lien **« Catalogue »** de la sidebar apprenant pointe vers `/catalog`, route
+  **pas encore créée** → 404 (prévue dans le blueprint, à venir).
+- Seule la page **login** a le design shadcn « premium » ; les autres pages sont encore
+  l'ancien markup (à l'intérieur du nouveau shell sidebar/topbar).
+- Les champs catalogue ajoutés en base (migration 0006 : description, vignette, catégorie,
+  niveau, visibilité publique, tuteur) ne sont **pas encore exposés** dans l'UI admin.
+- **Non implémenté** : anti-copie (NFR-10), RGPD (NFR-08 : consentement/effacement),
+  suivi budget LLM (NFR-06).
+- La génération de quiz par IA (Workers AI) peut entraîner des coûts et nécessite
+  l'accès au binding `AI`.

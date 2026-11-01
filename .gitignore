@@ -31,3 +31,6 @@ coverage/
 Helveticore OÜ.pdf
 Helveticore OÜ _ e-Äriregister.pdf
 PayoneerToRevolutHelveticore.png
+
+# Clés SSH locales — à ne jamais publier
+.ssh/

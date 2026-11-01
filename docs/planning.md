@@ -1,8 +1,8 @@
 # Planning — GeberLMS · 10 milestones (m1 → m10)
 
 Plan de fin d'implémentation en **10 milestones**. Chaque milestone : un répertoire
-`docs/devlog/mN/`, une version `0.N.0`, un tag `v0.N.0`, une doc (manuel versionné)
-et un feedback (dans le devlog).
+`docs/devlog/mN/`, une version `0.N.0`, un tag `v0.N.0`, une doc (manuel versionné),
+un feedback et un SBOM (`SBOM.md`) dans le devlog.
 
 > Convention : version sémantique — m1 = v0.1.0 … m10 = v1.0.0.
 > m1 est **livré** ; m2 → m10 sont planifiés.
@@ -30,6 +30,7 @@ progression, quiz, paiement, facturation), auth serveur, routes admin/tuteur/app
 i18n/RTL (FR/EN/AR/DE), paiement Payoneer + facturation TVA, génération de quiz LLM,
 uploads R2, app shell (sidebar/topbar).
 - Doc : `docs/manual-dev-v0.1.0-m1.md`
+- SBOM : `docs/devlog/m1/SBOM.md`
 - Devlog : `docs/devlog/m1/`
 
 ### m2 — v0.2.0 — Catalogue public

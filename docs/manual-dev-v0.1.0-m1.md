@@ -1,4 +1,8 @@
-# Manuel de test — GeberLMS v0.1.0
+# Manuel de test — GeberLMS v0.1.0 (milestone m1)
+
+> **Version** : 0.1.0 · **Milestone** : m1
+> **Git** : branche `main` · tag `v0.1.0`
+> **Date** : 2026-11-01
 
 Test manuel de la version 0.1.0 en environnement **local** (D1 locale via Wrangler).
 
@@ -27,6 +31,7 @@ npx tsx scripts/seed-demo.ts
 ## 3. Démarrage
 
 ```bash
+
 npm run dev
 ```
 

@@ -12,3 +12,8 @@ Journal vivant : complété au fil de la session.
 
 **Q** — « Qu'est-ce que Wrangler ? Lie l'explication à *data wrangling* et à l'étymologie de *wrangle*. »
 **R** — **Wrangler** : CLI de Cloudflare (développer/tester/déployer Workers, D1, R2, KV). Étymologie : *wrangle* = se débattre / dompter / maîtriser ; un *horse wrangler* rassemble et contrôle les chevaux. Le *data wrangling* = nettoyer/organiser des données brutes. Cloudflare a nommé l'outil par cette métaphore : il « dompte » les ressources Cloudflare et les met en ordre.
+
+## Vocabulaire du domaine
+
+**Q** — « Que veut dire *guardianships* ? »
+**R** — *guardian* = tuteur (celui qui a la responsabilité de veiller sur quelqu'un) ; *guardianship* = tutelle. Dans GeberLMS, c'est le **lien tuteur ↔ apprenant** : une paire `{ tutorId, learnerId }`. Utilisée pour FR-04 (associer), FR-06 (validation du payeur) et FR-07 (le tuteur ne voit que ses apprenants liés). Métaphore de la tutelle : le tuteur « veille sur » l'apprenant (finance + suit sa progression).

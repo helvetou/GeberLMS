@@ -74,6 +74,49 @@ npm run build       # build adapter-cloudflare
 
 ## 6. Scénarios de test
 
+### 6.0 — Parcours guidé (fil conducteur)
+
+Enchaînement de bout en bout, à suivre dans l'ordre (**admin → tuteur → apprenant**).
+Chaque étape : l'action, puis le point de contrôle « ✅ Vérifie ». Détail des écrans : voir 6.2 → 6.9.
+
+#### Acte 1 — Admin (`admin@example.com` / `changeme`)
+
+1. **Connexion** : `/login` → Email + Mot de passe → « Se connecter ».
+   ✅ redirection `/admin/courses` ; sidebar à 6 items.
+2. **Créer un cours** (6.2) : « Nouveau cours » → Titre `Anglais professionnel`,
+   Slug `en-pro`, Langue `en`, Prix (centimes) `5000` → « Créer ».
+   ✅ le cours apparaît (`€50`).
+3. **Structurer** (6.2) : dans le cours, « Ajouter un module » (`Module 1`), puis
+   « Ajouter une leçon » (`Leçon 1`, type `text`) et (`Quiz 1`, type `quiz`), puis
+   « Ajouter une ressource » (`PDF support`).
+   ✅ arborescence Cours → Module → 2 leçons → 1 ressource.
+4. **Créer un coupon** (6.5) : « Coupons » → « Nouveau coupon » → Code `BIENVENUE10`,
+   Type `%`, Valeur `10` → « Créer ».
+   ✅ `BIENVENUE10 — 10 %` dans « Existants ».
+5. **Inscrire** (6.4) : « Inscrire un apprenant à un cours » → Email `learner@demo.ee`,
+   Cours `Anglais professionnel`, Coupon `BIENVENUE10` → « Inscrire ».
+   ✅ « Inscription créée — total 54 €. »
+6. **Marquer payé** (6.6) : « Inscriptions & paiements » → « Marquer payé (Payoneer) ».
+   ✅ « Paiement confirmé — facture INV-… ».
+7. *(Optionnel)* **Quiz** (6.7) : ajouter une question sur `Quiz 1` — ne pas cliquer
+   « Générer (IA) » (coût).
+8. **Déconnexion** : menu avatar (haut droite) → « Déconnexion ».
+
+#### Acte 2 — Tuteur (`tutor@demo.ee` / `DemoTutor123!`)
+
+9. **Connexion** → ✅ redirection `/tutor`, sidebar à 1 item.
+10. **Dashboard** (6.8) → ✅ `Élève Démo` listé avec progression `x/y leçons`.
+11. **Déconnexion**.
+
+#### Acte 3 — Apprenant (`learner@demo.ee` / `DemoLearner123!`)
+
+12. **Connexion** → ✅ redirection `/learner`.
+13. **Dashboard** (6.9) → ✅ « Français débutant » + « Anglais professionnel » listés.
+14. **Progression** (6.9) : « Marquer terminée » sur une leçon → ✅ compteur `x/y` augmente.
+15. *(Si 7 faite)* **Quiz** (6.9) : répondre → « Valider le quiz » → ✅ score affiché.
+16. *(Optionnel)* **Upload** (6.9) : « Mes documents » → fichier → « Déposer ».
+17. **Déconnexion**.
+
 ### 6.1 Global / transversal
 
 - Se connecter, puis vérifier l'aiguillage par rôle :

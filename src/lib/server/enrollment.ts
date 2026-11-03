@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import type { DB } from './db';
 import { users, courses, guardianships, enrollments, coupons } from './db/schema';
 import { createEnrollmentForLearner } from '$lib/domain/enrollment';
@@ -49,6 +49,15 @@ export async function enrollLearner(
   const courseRow = await db.select().from(courses).where(eq(courses.id, input.courseId)).get();
   if (!courseRow) {
     throw new EnrollmentServiceError('Cours introuvable');
+  }
+
+  const existing = await db
+    .select({ id: enrollments.id })
+    .from(enrollments)
+    .where(and(eq(enrollments.learnerId, userRow.id), eq(enrollments.courseId, input.courseId)))
+    .get();
+  if (existing) {
+    throw new EnrollmentServiceError('Cet apprenant est déjà inscrit à ce cours');
   }
 
   const links = await db

@@ -50,3 +50,15 @@ Journal des sessions de test du milestone courant (GeberLMS v0.1.0).
 - **Résultat constaté** : 210 tests passés (206 existants + 4 nouveaux), 22 fichiers.
 - **Verdict** : PASS
 - **Notes** : test d'intégration **domaine** (pas E2E navigateur — prévu en m9). Explication : `howto/integration-test-manuel-dev-m1.md`.
+
+### [2026-11-03] — Acte 1 (navigateur) — parcours §6.0
+
+- **Contexte** : test manuel de l'Acte 1 (admin) en navigateur.
+- **Étapes** : création cours, structuration, coupon, inscription, paiement, quiz.
+- **Résultat attendu** : tout le parcours admin fonctionne.
+- **Résultat constaté** :
+  1. Suppression de « Français débutant » refusée (cours avec inscriptions) → **comportement correct** (§6.2), mais message peu visible.
+  2. **500 Internal Error** à l'inscription : ré-inscription d'un apprenant déjà inscrit → contrainte `UNIQUE(learner_id, course_id)` non gérée.
+  3. Formulaire « Ajouter une question » caché dans un `<details>` replié → difficile à trouver.
+- **Verdict** : FAIL (2 vrais problèmes) → **corrigés**
+- **Notes** : fix #2 = contrôle de doublon dans `enrollLearner` (serveur) ; fix #3 = `<details open>` sur la page quiz.

@@ -36,7 +36,7 @@
       <button type="submit">{t('quizzes.generate')}</button>
     </form>
 
-    <details>
+    <details open>
       <summary>{t('quizzes.addQuestion')}</summary>
       <form method="POST" action="?/createQuestion">
         <input type="hidden" name="lessonId" value={lesson.lessonId} />

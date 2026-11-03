@@ -17,3 +17,6 @@ Journal vivant : complété au fil de la session.
 
 **Q** — « Que veut dire *guardianships* ? »
 **R** — *guardian* = tuteur (celui qui a la responsabilité de veiller sur quelqu'un) ; *guardianship* = tutelle. Dans GeberLMS, c'est le **lien tuteur ↔ apprenant** : une paire `{ tutorId, learnerId }`. Utilisée pour FR-04 (associer), FR-06 (validation du payeur) et FR-07 (le tuteur ne voit que ses apprenants liés). Métaphore de la tutelle : le tuteur « veille sur » l'apprenant (finance + suit sa progression).
+
+**Q** — « Que veut dire *prompt* dans la définition d'une question quiz ? »
+**R** — *prompt* (de *to prompt* = inciter, solliciter une réponse) = l'**énoncé de la question** : le champ `prompt` de `QuizQuestion`, affiché sous le libellé « Énoncé » dans l'UI. ⚠️ À ne pas confondre avec le **prompt-IA** (l'instruction envoyée au LLM par `buildQuizPrompt` pour générer des questions).

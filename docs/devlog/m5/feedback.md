@@ -1,12 +1,12 @@
 # Feedback — Milestone m5
 
-Retour d'expérience sur le milestone courant (GeberLMS v0.5.0).
+Experience feedback on the current milestone (GeberLMS v0.5.0).
 
-## Points positifs
+## Positives
 
 -
 
-## Points bloquants / à améliorer
+## Blockers / improvements
 
 -
 
@@ -14,6 +14,6 @@ Retour d'expérience sur le milestone courant (GeberLMS v0.5.0).
 
 -
 
-## Questions ouvertes
+## Open questions
 
 -

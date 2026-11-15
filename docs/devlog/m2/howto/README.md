@@ -1,7 +1,7 @@
 # How-to — Milestone m2
 
-Petits tutos pour mieux comprendre le développement (GeberLMS v0.2.0).
+Small tutorials to better understand development (GeberLMS v0.2.0).
 
 ## Index
 
-(ajouter les tutos ici — un fichier ou une section par sujet)
+(add tutorials here — one file or section per topic)

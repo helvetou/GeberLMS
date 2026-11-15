@@ -1,16 +1,16 @@
 # Devlog — Milestone m7 (v0.7.0)
 
-Journal de développement du milestone **m7** — GeberLMS v0.7.0.
+Development journal of milestone **m7** — GeberLMS v0.7.0.
 
-## Métadonnées
+## Metadata
 
-- **Milestone** : m7
-- **Version** : 0.7.0
-- **Tag** : v0.7.0 (à poser à la livraison)
-- **Scope** : Conformité & sécurité — RGPD, anti-copie avancé, budget LLM
+- **Milestone**: m7
+- **Version**: 0.7.0
+- **Tag**: v0.7.0 (to set at delivery)
+- **Scope**: Admin accounts, monetization & OSS accounting validation — users, enrollments, coupons, payments
 
-## Contenu
+## Content
 
-- [`test-log.md`](test-log.md) — expérience de test.
+- [`test-log.md`](test-log.md) — test experience.
 - [`feedback.md`](feedback.md) — feedback.
-- [`howto/`](howto/) — petits tutos.
+- [`howto/`](howto/) — small tutorials.

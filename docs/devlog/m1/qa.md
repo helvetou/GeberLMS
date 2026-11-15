@@ -1,22 +1,22 @@
 # Q&A — Milestone m1
 
-Questions posées pendant l'application du manuel de test, avec les réponses.
-Journal vivant : complété au fil de la session.
+Questions asked while applying the test manual, with answers.
+Living journal: completed over the session.
 
-## §1 — Prérequis
+## §1 — Prerequisites
 
-**Q** — « Explique en quelques mots node et npm. »
-**R** — **Node.js** : runtime qui exécute du JavaScript hors navigateur (build, scripts, tests). **npm** : gestionnaire de paquets de Node (installe les dépendances, lance les scripts du projet).
+**Q** — "Explain in a few words node and npm."
+**A** — **Node.js**: a runtime that executes JavaScript outside the browser (build, scripts, tests). **npm**: Node's package manager (installs dependencies, runs the project's scripts).
 
-## §2 — Mise en place de la base locale
+## §2 — Local database setup
 
-**Q** — « Qu'est-ce que Wrangler ? Lie l'explication à *data wrangling* et à l'étymologie de *wrangle*. »
-**R** — **Wrangler** : CLI de Cloudflare (développer/tester/déployer Workers, D1, R2, KV). Étymologie : *wrangle* = se débattre / dompter / maîtriser ; un *horse wrangler* rassemble et contrôle les chevaux. Le *data wrangling* = nettoyer/organiser des données brutes. Cloudflare a nommé l'outil par cette métaphore : il « dompte » les ressources Cloudflare et les met en ordre.
+**Q** — "What is Wrangler? Link the explanation to *data wrangling* and to the etymology of *wrangle*."
+**A** — **Wrangler**: Cloudflare's CLI (develop/test/deploy Workers, D1, R2, KV). Etymology: *wrangle* = to struggle / tame / master; a *horse wrangler* rounds up and controls horses. *Data wrangling* = cleaning/organizing raw data. Cloudflare named the tool by this metaphor: it "tames" Cloudflare resources and puts them in order.
 
-## Vocabulaire du domaine
+## Domain vocabulary
 
-**Q** — « Que veut dire *guardianships* ? »
-**R** — *guardian* = tuteur (celui qui a la responsabilité de veiller sur quelqu'un) ; *guardianship* = tutelle. Dans GeberLMS, c'est le **lien tuteur ↔ apprenant** : une paire `{ tutorId, learnerId }`. Utilisée pour FR-04 (associer), FR-06 (validation du payeur) et FR-07 (le tuteur ne voit que ses apprenants liés). Métaphore de la tutelle : le tuteur « veille sur » l'apprenant (finance + suit sa progression).
+**Q** — "What does *guardianships* mean?"
+**A** — *guardian* = tutor (the person responsible for watching over someone); *guardianship* = guardianship/tutelage. In GeberLMS, it is the **tutor ↔ learner link**: a `{ tutorId, learnerId }` pair. Used for FR-04 (link), FR-06 (payer validation) and FR-07 (a tutor sees only their linked learners). Tutelage metaphor: the tutor "watches over" the learner (funds + tracks their progress).
 
-**Q** — « Que veut dire *prompt* dans la définition d'une question quiz ? »
-**R** — *prompt* (de *to prompt* = inciter, solliciter une réponse) = l'**énoncé de la question** : le champ `prompt` de `QuizQuestion`, affiché sous le libellé « Énoncé » dans l'UI. ⚠️ À ne pas confondre avec le **prompt-IA** (l'instruction envoyée au LLM par `buildQuizPrompt` pour générer des questions).
+**Q** — "What does *prompt* mean in the definition of a quiz question?"
+**A** — *prompt* (from *to prompt* = to incite, to elicit a response) = the **question statement**: the `prompt` field of `QuizQuestion`, shown under the "Énoncé" label in the UI. ⚠️ Not to be confused with the **AI prompt** (the instruction sent to the LLM by `buildQuizPrompt` to generate questions).

@@ -1,29 +1,28 @@
 # SBOM — Milestone m9 (v0.9.0)
 
-Software Bill of Materials du milestone **m9** — GeberLMS v0.9.0.
+Software Bill of Materials of milestone **m9** — GeberLMS v0.9.0.
 
-## Métadonnées
+## Metadata
 
-- **Milestone** : m9
-- **Version** : 0.9.0
-- **Tag** : v0.9.0 (à poser à la livraison)
-- **Date** : —
-- **Statut** : planifié
+- **Milestone**: m9
+- **Version**: 0.9.0
+- **Tag**: v0.9.0 (to set at delivery)
+- **Date**: —
+- **Status**: planned
 
-## Base héritée
+## Inherited base
 
-Le SBOM de référence est celui de m1 : [`../m1/SBOM.md`](../m1/SBOM.md).
-Ce milestone hérite de cette base et ajoute ou modifie les composants ci-dessous.
+The reference SBOM is m1's: [`../m1/SBOM.md`](../m1/SBOM.md).
+This milestone inherits that base and adds or modifies the components below.
 
-## Composants anticipés (à confirmer à la livraison)
+## Anticipated components (to confirm at delivery)
 
-- **Routes** : —
-- **Composants UI** : —
-- **Dépendances** : @playwright/test
-- **Notes** : tests navigateur E2E, audit de conformité, couverture ≥ 80 %, perf p95 < 1,5 s
+- **Routes**: —
+- **UI components**: —
+- **Dependencies**: @playwright/test (full suite)
+- **Notes**: E2E tests, audit, coverage ≥ 80%, perf
 
-## À compléter à la livraison
+## To fill in at delivery
 
-Renseigner les versions exactes des dépendances, lister les nouveaux modules
-premier-party (`src/lib/domain`, `src/lib/server`, `src/lib/components`)
-et re-vérifier l'ensemble du SBOM après implémentation.
+Record the exact dependency versions, list the new first-party modules
+(`src/lib/domain`, `src/lib/server`, `src/lib/components`) and re-verify the whole SBOM after implementation.

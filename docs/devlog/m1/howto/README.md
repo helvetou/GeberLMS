@@ -1,9 +1,8 @@
 # How-to — Milestone m1
 
-Petits tutos pour mieux comprendre le développement (GeberLMS v0.1.0).
+Small tutorials to better understand development (GeberLMS v0.1.0).
 
 ## Index
 
-- [`integration-test-manuel-dev-m1.md`](integration-test-manuel-dev-m1.md) — comment
-  fonctionne le test d'intégration `test_integration_manuel_dev_m1` (parcours du manuel
-  sur la logique métier pure).
+- [`integration-test-manuel-dev-m1.md`](integration-test-manuel-dev-m1.md) — how the
+  `test_integration_manuel_dev_m1` integration test works (manual flow over pure business logic).

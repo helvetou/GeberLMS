@@ -1,16 +1,16 @@
 # Devlog — Milestone m8 (v0.8.0)
 
-Journal de développement du milestone **m8** — GeberLMS v0.8.0.
+Development journal of milestone **m8** — GeberLMS v0.8.0.
 
-## Métadonnées
+## Metadata
 
-- **Milestone** : m8
-- **Version** : 0.8.0
-- **Tag** : v0.8.0 (à poser à la livraison)
-- **Scope** : Qualité & reproductibilité — migrations/seeds idempotents, localisation, prérequis dev
+- **Milestone**: m8
+- **Version**: 0.8.0
+- **Tag**: v0.8.0 (to set at delivery)
+- **Scope**: Compliance & security — GDPR, advanced anti-copy (quotas/logs), LLM budget (alerts 80/100 €)
 
-## Contenu
+## Content
 
-- [`test-log.md`](test-log.md) — expérience de test.
+- [`test-log.md`](test-log.md) — test experience.
 - [`feedback.md`](feedback.md) — feedback.
-- [`howto/`](howto/) — petits tutos.
+- [`howto/`](howto/) — small tutorials.

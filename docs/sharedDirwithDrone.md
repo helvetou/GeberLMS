@@ -1,77 +1,63 @@
-# Convention — Répertoire partagé avec le Job Market Survey Drone
+# Convention — Shared directory with the Job Market Survey Drone
 
-> Prompt / jeu d'instructions destiné à l'agent du projet **`job-market-survey-drone`**.
-> Objet : définir la convention d'échange entre les deux projets.
+> Prompt / instruction set for the **`job-market-survey-drone`** project agent.
+> Purpose: define the exchange convention between the two projects.
 
-Projets concernés :
+Concerned projects:
 
-- **`job-market-survey-drone`** — le drone d'enquête du marché de l'emploi (**écrivain**).
-- **`geberstealth`** — le LMS Helveticore (**lecteur**).
+- **`job-market-survey-drone`** — the job-market survey drone (**writer**).
+- **`geberstealth`** — the Helveticore LMS (**reader**).
 
----
+## 1. Shared directory
 
-## 1. Répertoire partagé
-
-Toutes tes sorties vont dans le répertoire partagé **unique**, situé **dans** le repo
-du LMS :
+All your outputs go into the **single** shared directory, located **inside** the LMS repo:
 
 ```
 geberstealth/input-job-market-survey-drone/
 ```
 
-(chemin relatif depuis la racine du repo : `./input-job-market-survey-drone/`)
+(relative path from the repo root: `./input-job-market-survey-drone/`)
 
-C'est le **seul point d'échange** entre les deux projets.
+It is the **only exchange point** between the two projects.
 
-## 2. Rôles (à respecter strictement)
+## 2. Roles (strictly enforced)
 
-- **Toi (le drone)** : tu es le **seul écrivain** de ce répertoire. Tu y déposes
-  toutes tes propositions (nouveaux projets, formations, cours prévisionnels,
-  classements de compétences…).
-- **Le LMS (`geberstealth`)** : **lecteur seul**. Il consomme tes propositions
-  comme *input* (planning des milestones, contenu du catalogue), mais n'écrit
-  **jamais** dans ce répertoire.
+- **You (the drone)**: the **only writer** of this directory. You deposit all your proposals (new projects, training, forecasted courses, skill rankings…).
+- **The LMS (`geberstealth`)**: **reader only**. It consumes your proposals as *input* (milestone planning, catalog content), but never writes into this directory.
 
-## 3. Règles d'écriture
+## 3. Writing rules
 
-1. N'écris **jamais** ailleurs dans le repo `geberstealth/` — ni dans `docs/`, ni
-   à la racine. Tout passe par `input-job-market-survey-drone/`.
-2. Le repo `geberstealth/docs/` reste **exclusivement** consacré au développement
-   du LMS. Aucun contenu drone n'y a sa place.
-3. Organise tes sorties par nature, dans des sous-dossiers dédiés :
+1. Never write elsewhere in the `geberstealth/` repo — neither `docs/` nor the root. Everything goes through `input-job-market-survey-drone/`.
+2. The `geberstealth/docs/` repo stays **exclusively** dedicated to LMS development. No drone content belongs there.
+3. Organize your outputs by nature, in dedicated subfolders:
 
 ```
 input-job-market-survey-drone/
-├── roadmap/             ← propositions de projets + plan de formation
-│   ├── README.md        ← index (non daté)
-│   ├── new-projects-<AAAA-MM-JJ>.md
-│   └── training-to-prepare-<AAAA-MM-JJ>.md
-├── forecastedCourses/   ← plans de cours prévisionnels (un fichier par cours)
-│   ├── embedded-software-design-<AAAA-MM-JJ>.md
-│   ├── embedded-systems-<AAAA-MM-JJ>.md
-│   └── iot-<AAAA-MM-JJ>.md
-└── generated/           ← sorties brutes d'enquête (skills_demand.md, missing_skills.md…)
+├── roadmap/             ← project proposals + training plan
+│   ├── README.md        ← index (undated)
+│   ├── new-projects-<YYYY-MM-DD>.md
+│   └── training-to-prepare-<YYYY-MM-DD>.md
+├── forecastedCourses/   ← forecasted course plans (one file per course)
+│   ├── embedded-software-design-<YYYY-MM-DD>.md
+│   ├── embedded-systems-<YYYY-MM-DD>.md
+│   └── iot-<YYYY-MM-DD>.md
+└── generated/           ← raw survey outputs (skills_demand.md, missing_skills.md…)
 ```
 
-4. **Nommage** : `kebab-case`, fichiers Markdown, date de production en suffixe
-   `-<AAAA-MM-JJ>` sur les fichiers de contenu. Les `README.md` d'index ne sont
-   **pas** datés.
-5. **Statut & source** : en tête de chaque fichier, indique
-   `Status: planning | draft | ready` et la source (l'enquête qui l'a produit).
+4. **Naming**: `kebab-case`, Markdown files, production date as a `-<YYYY-MM-DD>` suffix on content files. Index `README.md` files are **not** dated.
+5. **Status & source**: at the top of each file, indicate `Status: planning | draft | ready` and the source (the survey that produced it).
 
-## 4. Ce que le LMS en fait (input attendu)
+## 4. What the LMS does with it (expected input)
 
-- `roadmap/` → propositions de projets à intégrer au planning des milestones.
-- `forecastedCourses/` → futurs contenus du catalogue GeberLMS.
-- `generated/` → classement des lacunes de compétences, utilisé pour prioriser.
+- `roadmap/` → project proposals to integrate into milestone planning.
+- `forecastedCourses/` → future GeberLMS catalog content.
+- `generated/` → skill-gap ranking, used for prioritization.
 
-Le LMS ne modifie jamais ces fichiers. Si un ajustement est nécessaire, il le
-consigne dans son propre `devlog` et c'est **toi** (le drone) qui réécris.
+The LMS never modifies these files. If an adjustment is needed, it records it in its own `devlog` and it is **you** (the drone) who rewrites.
 
-## 5. Cycle de vie
+## 5. Lifecycle
 
-1. Tu produis une proposition (projet / cours / formation).
-2. Tu l'écris dans `input-job-market-survey-drone/<catégorie>/`.
-3. Le LMS la lit pour planifier un milestone.
-4. En cas de retour, le LMS le note hors du répertoire partagé, et toi tu
-   reviens re-synchroniser.
+1. You produce a proposal (project / course / training).
+2. You write it into `input-job-market-survey-drone/<category>/`.
+3. The LMS reads it to plan a milestone.
+4. In case of feedback, the LMS notes it outside the shared directory, and you come back to re-synchronize.

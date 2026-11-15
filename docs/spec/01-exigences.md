@@ -1,122 +1,109 @@
-# LMS Helveticore — Spécification des exigences
+# LMS Helveticore — Requirements Specification
 
-Document de spécification des exigences. Numéro : SPEC-001. Version : 0.1.
-Statut : **Brouillon pour revue**. Méthodologie : CMMI-DEV niveau 3 (processus défini).
+Requirements specification document. Number: SPEC-001. Version: 0.1.
+Status: **Draft for review**. Methodology: CMMI-DEV level 3 (defined process).
 
----
+## 1. Purpose and scope
 
-## 1. Objet et périmètre
+The Helveticore LMS is a platform for selling courses produced by the operator,
+operated via **Helveticore OÜ** (Estonia). It enables:
 
-Le LMS Helveticore est une plateforme de vente de cours produits par l'exploitant,
-exploités via **Helveticore OÜ** (Estonie). Elle permet de :
+- selling courses to two categories of clients (funded learner, self-paying learner);
+- managing promo codes (full or partial discount);
+- tracking academic progress;
+- providing e-testing and LLM-based quiz generation.
 
-- vendre des cours à deux catégories de clients (apprenant financé, apprenant auto-payeur) ;
-- gérer des codes promo (réduction totale ou partielle) ;
-- suivre la progression académique ;
-- proposer de l'e-testing et de la génération de quiz par LLM.
+**Out of scope (v1)**: native mobile app, multi-vendor marketplace, integrated videoconferencing.
 
-**Hors périmètre (v1)** : application mobile native, marché multi-vendeurs, visioconférence intégrée.
+## 2. Business context
 
----
+- **Tax**: declarations in Estonia. Invoicing in EUR.
+- **Payment**: Payoneer (Helveticore account already validated), withdrawal to a recovery Revolut account (IBAN).
+- **VAT**: buyer's country rate (OSS scheme for EU consumers). Outside the EU: no EU VAT.
+- **Course languages**: one language among FR, EN, AR, DE (monolingual course).
+- **Target volume at launch**: a few dozen users.
+- **LLM budget**: ≤ €100/month.
 
-## 2. Contexte métier
+## 3. Actors and roles
 
-- **Fiscalité** : déclarations en Estonie. Facturation en EUR.
-- **Paiement** : Payoneer (compte Helveticore déjà validé), retrait des fonds vers un compte Revolut (IBAN) de récupération.
-- **TVA** : taux du pays de l'acheteur (régime OSS pour les consommateurs UE). Hors UE : pas de TVA UE.
-- **Langues des cours** : une langue parmi FR, EN, AR, DE (cours monolingue).
-- **Volume cible au lancement** : quelques dizaines d'utilisateurs.
-- **Budget LLM** : ≤ 100 € / mois.
-
----
-
-## 3. Acteurs et rôles
-
-| Rôle | Description |
+| Role | Description |
 |------|-------------|
-| **Admin** | Exploitant. Gère cours, ressources, coupons, comptes. |
-| **Apprenant** | Suit les cours. Soit financé par un tuteur, soit auto-payeur (flag `self_payer`). |
-| **Tuteur** | Finance un ou plusieurs apprenants et suit leur progression. |
+| **Admin** | Operator. Manages courses, resources, coupons, accounts. |
+| **Learner** | Follows courses. Either funded by a tutor, or self-paying (`self_payer` flag). |
+| **Tutor** | Funds one or more learners and tracks their progress. |
 
-Un apprenant peut être financé par un tuteur ; un apprenant auto-payeur se finance lui-même.
-Chaque inscription (course enrollment) est financée par **un seul payeur**.
+A learner can be funded by a tutor; a self-paying learner funds themselves.
+Each enrollment is funded by **a single payer**.
 
----
+## 4. Functional requirements
 
-## 4. Exigences fonctionnelles
+Unique identifiers `FR-xx`. Each requirement is testable and traced (see traceability matrix).
 
-Identifiants uniques `FR-xx`. Chaque exigence est testable et tracée (voir matrice de traçabilité).
+### 4.1 Accounts and access
 
-### 4.1 Comptes et accès
+- **FR-01** — The system distinguishes three roles: admin, learner, tutor.
+- **FR-02** — A learner is self-paying if `self_payer = true`, otherwise funded.
+- **FR-03** — No public self-registration. Learner and tutor accounts are created by the admin (via script / dashboard) after payment.
+- **FR-04** — The admin links one or more learners to a tutor.
+- **FR-05** — A learner can be enrolled in several courses.
+- **FR-06** — Each enrollment is funded by a single payer (the tutor or the learner themselves).
+- **FR-07** — A tutor sees only the learners they fund (and not those of other tutors).
 
-- **FR-01** — Le système distingue trois rôles : admin, apprenant, tuteur.
-- **FR-02** — L'apprenant est auto-payeur si `self_payer = true`, sinon il est financé.
-- **FR-03** — Aucune auto-inscription publique. Les comptes apprenant et tuteur sont créés par l'admin (via un script / tableau de bord) après paiement.
-- **FR-04** — L'admin associe un ou plusieurs apprenants à un tuteur.
-- **FR-05** — Un apprenant peut être inscrit à plusieurs cours.
-- **FR-06** — Chaque inscription est financée par un unique payeur (tuteur ou l'apprenant lui-même).
-- **FR-07** — Le tuteur voit uniquement les apprenants qu'il finance (et non ceux des autres tuteurs).
+### 4.2 Course structure
 
-### 4.2 Structure des cours
+- **FR-10** — A course is structured into modules → lessons → resources.
+- **FR-11** — The admin can add, modify, hide and delete a course, module, lesson or resource.
+- **FR-12** — A resource can be hidden without being deleted (reversible visibility).
+- **FR-13** — Content is mixed: video, text, quiz.
+- **FR-14** — A course is monolingual (FR / EN / AR / DE).
+- **FR-48** — The admin can **import a whole course (or a module)** from a **structured JSON** file (external authoring): strict validation, transactional insertion, reconciliation by stable key, and module/lesson reordering (milestone m3).
 
-- **FR-10** — Un cours est structuré en modules → leçons → ressources.
-- **FR-11** — L'admin peut ajouter, modifier, cacher et supprimer un cours, un module, une leçon ou une ressource.
-- **FR-12** — Une ressource peut être cachée sans être supprimée (visibilité réversible).
-- **FR-13** — Le contenu est mixte : vidéo, texte, quiz.
-- **FR-14** — Un cours est monolingue (FR / EN / AR / DE).
+### 4.3 Tracking and progress
 
-### 4.3 Suivi et progression
+- **FR-20** — The system records academic progress per learner and per lesson.
+- **FR-21** — The tutor dashboard shows, for each funded learner: courses, progress and results.
+- **FR-22** — The learner dashboard shows their courses, progress and document submissions.
+- **FR-23** — Every sensitive action (login, consultation, submission, grading, payment) is logged.
+- **FR-24** — A learner can upload a document within a course or lesson.
 
-- **FR-20** — Le système enregistre la progression académique par apprenant et par leçon.
-- **FR-21** — Le tableau de bord tuteur affiche, pour chaque apprenant financé : les cours, la progression et les résultats.
-- **FR-22** — Le tableau de bord apprenant affiche ses cours, sa progression et ses dépôts de documents.
-- **FR-23** — Chaque action sensible (connexion, consultation, dépôt, correction, paiement) est journalisée (logging).
-- **FR-24** — L'apprenant peut déposer (uploader) un document dans le cadre d'un cours ou d'une leçon.
+### 4.4 Assessment
 
-### 4.4 Évaluation
+- **FR-30** — The system provides e-testing: quizzes, optional timing, automatic grading.
+- **FR-31** — The admin can generate quizzes automatically via an LLM (default: Workers AI / Gemini; option: DeepSeek).
 
-- **FR-30** — Le système fournit de l'e-testing : quiz, chronométrage optionnel, correction automatique.
-- **FR-31** — L'admin peut générer des quiz automatiquement via un LLM (défaut : Workers AI / Gemini ; option : DeepSeek).
+### 4.5 Payment and coupons
 
-### 4.5 Paiement et coupons
+- **FR-40** — Payment goes through Payoneer (payment request or checkout); no card data is hosted by the LMS.
+- **FR-41** — On Payoneer collection confirmation, access is activated and the learner account can be created by the admin.
+- **FR-42** — The admin creates coupons: percentage discount (0–100) or fixed amount (EUR).
+- **FR-43** — A 100% coupon means full free access.
+- **FR-44** — A coupon can be limited (expiry date, number of uses).
+- **FR-45** — Coupons apply to funded learners as well as self-payers.
+- **FR-46** — The system computes the price: discount on the net, then VAT at the buyer's country rate.
+- **FR-47** — The system generates a (VAT) invoice for each paid enrollment.
 
-- **FR-40** — Le paiement passe par Payoneer (demande de paiement ou checkout) ; aucune donnée carte n'est hébergée par le LMS.
-- **FR-41** — À la confirmation de l'encaissement Payoneer, l'accès est activé et le compte apprenant peut être créé par l'admin.
-- **FR-42** — L'admin crée des coupons : réduction en pourcentage (0–100) ou en montant fixe (EUR).
-- **FR-43** — Un coupon de 100 % correspond à une gratuité totale.
-- **FR-44** — Un coupon peut être limité (date d'expiration, nombre d'utilisations).
-- **FR-45** — Les coupons s'appliquent aux apprenants financés comme aux auto-payeurs.
-- **FR-46** — Le système calcule le prix : remise sur le net, puis TVA au taux du pays de l'acheteur.
-- **FR-47** — Le système génère une facture (TVA) pour chaque inscription payante.
+## 5. Non-functional requirements
 
----
+- **NFR-01 (Platform)** — Deployment on Cloudflare (Workers/Pages, D1, R2, KV).
+- **NFR-02 (Performance)** — Lightweight structure; target page response time < 1.5 s (p95).
+- **NFR-03 (Security)** — No card data in the LMS (Payoneer); strict role-based access control; secrets out of code.
+- **NFR-04 (Testability)** — TDD; business logic in pure modules with no infrastructure dependency.
+- **NFR-05 (Maintainability)** — Typed code (strict TypeScript), modular, documented.
+- **NFR-06 (Cost)** — LLM generation ≤ €100/month.
+- **NFR-07 (Scale)** — Sized for a few dozen users at launch.
+- **NFR-08 (Compliance)** — VAT/OSS; GDPR (personal data, consent, erasure).
+- **NFR-09 (Traceability)** — Audit log of admin and academic actions.
+- **NFR-10 (Anti-copy)** — Difficulty of mass extraction of content (see architecture, §5).
 
-## 5. Exigences non fonctionnelles
+## 6. Business rules (BR)
 
-- **NFR-01 (Plateforme)** — Déploiement sur Cloudflare (Workers/Pages, D1, R2, KV).
-- **NFR-02 (Performance)** — Structure légère ; temps de réponse page cible < 1,5 s (p95).
-- **NFR-03 (Sécurité)** — Pas de données carte côté LMS (Payoneer) ; contrôle d'accès strict par rôle ; secrets hors du code.
-- **NFR-04 (Testabilité)** — TDD ; logique métier en modules purs sans dépendance à l'infrastructure.
-- **NFR-05 (Maintenabilité)** — Code typé (TypeScript strict), modulaire, documenté.
-- **NFR-06 (Coût)** — Génération LLM ≤ 100 € / mois.
-- **NFR-07 (Échelle)** — Dimensionné pour quelques dizaines d'utilisateurs au lancement.
-- **NFR-08 (Conformité)** — TVA/OSS ; RGPD (données personnelles, consentement, effacement).
-- **NFR-09 (Traçabilité)** — Journal d'audit des actions admin et académiques.
-- **NFR-10 (Anti-copie)** — Difficulté d'extraction en masse du contenu (voir architecture, §5).
+- **BR-01** — Amounts handled in integer cents; no floating-point arithmetic on money.
+- **BR-02** — Discount applied to the net price, VAT computed on the discounted amount.
+- **BR-03** — Outside the EU: EU VAT rate = 0.
+- **BR-04** — A discount can never make the total negative.
+- **BR-05** — VAT rates are versioned data, re-validated before production.
 
----
+## 7. Traceability
 
-## 6. Règles métier (BR)
-
-- **BR-01** — Montants manipulés en centimes (entiers) ; aucune arithmétique flottante sur l'argent.
-- **BR-02** — Remise appliquée sur le prix net, TVA calculée sur le montant remisé.
-- **BR-03** — Hors UE : taux de TVA UE = 0.
-- **BR-04** — Une remise ne peut jamais rendre le total négatif.
-- **BR-05** — Les taux de TVA sont des données versionnées, re-validées avant mise en production.
-
----
-
-## 7. Traçabilité
-
-Chaque exigence est reliée à au moins un test et un module (voir `03-processus-cmmi3.md`, §5).
-Le suivi se fait par la matrice exigences → tests → code.
+Each requirement is linked to at least one test and one module (see `03-processus-cmmi3.md`, §5).
+Tracking is done via the requirements → tests → code matrix.

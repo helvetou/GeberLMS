@@ -1,29 +1,28 @@
 # SBOM — Milestone m2 (v0.2.0)
 
-Software Bill of Materials du milestone **m2** — GeberLMS v0.2.0.
+Software Bill of Materials of milestone **m2** — GeberLMS v0.2.0.
 
-## Métadonnées
+## Metadata
 
-- **Milestone** : m2
-- **Version** : 0.2.0
-- **Tag** : v0.2.0 (à poser à la livraison)
-- **Date** : —
-- **Statut** : planifié
+- **Milestone**: m2
+- **Version**: 0.2.0
+- **Tag**: v0.2.0 (to set at delivery)
+- **Date**: —
+- **Status**: planned
 
-## Base héritée
+## Inherited base
 
-Le SBOM de référence est celui de m1 : [`../m1/SBOM.md`](../m1/SBOM.md).
-Ce milestone hérite de cette base et ajoute ou modifie les composants ci-dessous.
+The reference SBOM is m1's: [`../m1/SBOM.md`](../m1/SBOM.md).
+This milestone inherits that base and adds or modifies the components below.
 
-## Composants anticipés (à confirmer à la livraison)
+## Anticipated components (to confirm at delivery)
 
-- **Routes** : route publique /catalog (liste) + /catalog/[slug] (détail)
-- **Composants UI** : course-card, catalog-search, catalog-filters, course-detail
-- **Dépendances** : aucune nouvelle (réutilise shadcn-svelte)
-- **Notes** : expose les champs 0006 ; ferme le 404 Catalogue
+- **Routes**: —
+- **UI components**: —
+- **Dependencies**: @playwright/test (foundation)
+- **Notes**: idempotent migrations/seeds, local dev without remote AI binding, localization
 
-## À compléter à la livraison
+## To fill in at delivery
 
-Renseigner les versions exactes des dépendances, lister les nouveaux modules
-premier-party (`src/lib/domain`, `src/lib/server`, `src/lib/components`)
-et re-vérifier l'ensemble du SBOM après implémentation.
+Record the exact dependency versions, list the new first-party modules
+(`src/lib/domain`, `src/lib/server`, `src/lib/components`) and re-verify the whole SBOM after implementation.

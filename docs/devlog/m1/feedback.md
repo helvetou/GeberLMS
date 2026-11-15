@@ -1,34 +1,34 @@
 # Feedback — Milestone m1
 
-Retour d'expérience sur le milestone courant (GeberLMS v0.1.0).
+Experience feedback on the current milestone (GeberLMS v0.1.0).
 
-## Points positifs
+## Positives
 
-- Environnement prêt : base locale déjà migrée, `npm run dev` démarre sans l'erreur
-  `CLOUDFLARE_API_TOKEN` (identifiants Cloudflare présents).
-- Le test d'intégration `test_integration_manuel_dev_m1` automatise le parcours
-  et évite de perdre du temps sur des bugs en test manuel.
+- Environment ready: local DB already migrated, `npm run dev` starts without the
+  `CLOUDFLARE_API_TOKEN` error (Cloudflare credentials present).
+- The `test_integration_manuel_dev_m1` integration test automates the flow
+  and avoids wasting time on manual-testing bugs.
 
-## Points bloquants / à améliorer
+## Blockers / improvements
 
-- **500 Internal Error à l'inscription** : ré-inscrire un apprenant déjà inscrit à un
-  cours provoquait une erreur SQLite non gérée (contrainte `UNIQUE`). **Corrigé** :
-  contrôle de doublon dans `enrollLearner` + message clair.
-- **Formulaire quiz peu visible** : « Ajouter une question » était caché dans un
-  `<details>` replié. **Corrigé** : ouvert par défaut (`<details open>`).
-- **Suppression d'un cours inscrit** : le refus est correct (§6.2), mais le message
-  « Cours avec inscriptions — suppression refusée » est un simple paragraphe peu visible
-  → à mettre en forme (alerte rouge) plus tard.
-- Le manuel §6.5 annonce « activer/désactiver » les coupons, mais ce toggle n'est pas
-  implémenté (écart audit §7.2).
-- Migrations non idempotentes (écart audit §7.3, planifié en m8).
+- **500 Internal Error on enrollment**: re-enrolling a learner already enrolled in a
+  course caused an unhandled SQLite error (`UNIQUE` constraint). **Fixed**: duplicate
+  check in `enrollLearner` + clear message.
+- **Hard-to-see quiz form**: "Ajouter une question" was hidden in a collapsed
+  `<details>`. **Fixed**: open by default (`<details open>`).
+- **Deleting an enrolled course**: the refusal is correct (§6.2), but the message
+  "Cours avec inscriptions — suppression refusée" is a plain, hard-to-see paragraph
+  → to be styled (red alert) later.
+- Manual §6.5 announces coupon "enable/disable", but this toggle is not
+  implemented (audit gap §7.2).
+- Non-idempotent migrations (audit gap §7.3, planned in m8).
 
 ## Suggestions
 
-- Ajouter un vrai test E2E navigateur (Playwright) en m9 pour couvrir le parcours §6.0.
-- Corriger §6.5 du manuel (retirer « activer/désactiver » tant que le toggle n'existe pas).
-- Styliser les erreurs d'action (`form.error`) en alerte rouge, comme la page login.
+- Add a real browser E2E test (Playwright) in m9 to cover the §6.0 flow.
+- Fix manual §6.5 (remove "enable/disable" as long as the toggle doesn't exist).
+- Style action errors (`form.error`) as a red alert, like the login page.
 
-## Questions ouvertes
+## Open questions
 
 -

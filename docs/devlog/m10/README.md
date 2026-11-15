@@ -1,16 +1,16 @@
 # Devlog — Milestone m10 (v1.0.0)
 
-Journal de développement du milestone **m10** — GeberLMS v1.0.0.
+Development journal of milestone **m10** — GeberLMS v1.0.0.
 
-## Métadonnées
+## Metadata
 
-- **Milestone** : m10
-- **Version** : 1.0.0
-- **Tag** : v1.0.0 (à poser à la livraison)
-- **Scope** : Lancement — déploiement prod, premiers cours, facturation/OSS, doc finale
+- **Milestone**: m10
+- **Version**: 1.0.0
+- **Tag**: v1.0.0 (to set at delivery)
+- **Scope**: Launch — final prod deployment, first real courses published, final docs
 
-## Contenu
+## Content
 
-- [`test-log.md`](test-log.md) — expérience de test.
+- [`test-log.md`](test-log.md) — test experience.
 - [`feedback.md`](feedback.md) — feedback.
-- [`howto/`](howto/) — petits tutos.
+- [`howto/`](howto/) — small tutorials.

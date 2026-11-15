@@ -1,69 +1,59 @@
-# LMS Helveticore — Processus (CMMI-DEV niveau 3)
+# LMS Helveticore — Process (CMMI-DEV level 3)
 
-Document de processus. Numéro : SPEC-003. Version : 0.1.
+Process document. Number: SPEC-003. Version: 0.1.
 
----
+## 1. Purpose
 
-## 1. Objet
+This document defines the project's **standard development process**, aligned with the
+spirit of CMMI-DEV level 3: documented, standardized, adaptable process, with peer
+reviews, traceability and measurement. The implementation methodology is **TDD**.
 
-Ce document définit le **processus standard** de développement du projet, aligné sur
-l'esprit CMMI-DEV niveau 3 : processus documenté, standardisé, adaptable, avec revues
-par les pairs, traçabilité et mesure. La méthodologie d'implémentation est le **TDD**.
-
----
-
-## 2. Cycle de vie standard
+## 2. Standard lifecycle
 
 ```
-Exigence ──► Conception ──► Implémentation (TDD) ──► Vérification ──► Validation ──► Livraison
-                │                    │                    │               │              │
-             revue               revue code           tests verts     revue métier   déploiement
+Requirement ──► Design ──► Implementation (TDD) ──► Verification ──► Validation ──► Delivery
+                │              │                     │                 │              │
+              review        code review          green tests       business review  deployment
 ```
 
-Chaque exigence traverse l'ensemble du cycle. Rien n'est « fait » tant que la vérification
-(tests) n'est pas passée et que la revue n'est pas tracée.
+Each requirement traverses the whole cycle. Nothing is "done" until verification
+(tests) passes and the review is traced.
 
----
+## 3. TDD — working rules
 
-## 3. TDD — règles de travail
+Strict loop: **Red → Green → Refactor**.
 
-Boucle stricte : **Rouge → Vert → Refactor**.
+1. Write a test expressing the expected behavior (it fails: *red*).
+2. Write the minimum code to pass the test (*green*).
+3. Refactor without changing behavior (tests stay green).
+4. Commit per validated increment.
 
-1. Écrire un test qui exprime le comportement attendu (il échoue : *rouge*).
-2. Écrire le minimum de code pour faire passer le test (*vert*).
-3. Refactoriser sans changer le comportement (les tests restent verts).
-4. Commit par incrément validé.
+Rules:
 
-Règles :
+- No production code without a test covering it.
+- Business logic in `src/lib/domain`, tested by Vitest without infrastructure.
+- A test expresses a behavior, not an implementation.
+- The test suite is part of the Definition of Done (DoD).
 
-- Pas de code de production sans test qui le couvre.
-- Logique métier dans `src/lib/domain`, testée par Vitest sans infrastructure.
-- Un test exprime un comportement, pas une implémentation.
-- La suite de tests fait partie de la définition du « terminé » (DoD).
+Example already in place: `domain/pricing`, `domain/coupon`, `domain/vat` + 23 green tests.
 
-Exemple déjà en place : `domain/pricing`, `domain/coupon`, `domain/vat` + 23 tests verts.
+## 4. Review gates
 
----
+| Gate | When | Exit criterion |
+|------|------|----------------|
+| G1 Requirements | end of SPEC-001 | requirements identified, testable, traced |
+| G2 Design | before coding | architecture + data model approved |
+| G3 Code | end of a requirement | green tests + peer review |
+| G4 Verification | before delivery | full suite green, clean typecheck |
+| G5 Validation | before prod | business scenarios validated by the operator |
 
-## 4. Portes de revue (gates)
+Any blocking gate is documented and must be cleared before continuing.
 
-| Porte | Quand | Critère de sortie |
-|-------|-------|-------------------|
-| G1 Exigences | fin de SPEC-001 | exigences identifiées, testables, tracées |
-| G2 Conception | avant codage | architecture + modèle de données approuvés |
-| G3 Code | fin d'une exigence | tests verts + revue par les pairs |
-| G4 Vérification | avant livraison | suite complète verte, typecheck propre |
-| G5 Validation | avant prod | scénarios métier validés par l'exploitant |
+## 5. Traceability matrix
 
-Toute porte bloquante est documentée et doit être levée avant de continuer.
+Each requirement is linked to its implementation and its tests. Initial extract:
 
----
-
-## 5. Matrice de traçabilité
-
-Chaque exigence est reliée à son implémentation et à ses tests. Extrait initial :
-
-| Exigence | Module | Tests |
+| Requirement | Module | Tests |
 |----------|--------|-------|
 | FR-01 / FR-03 | `src/lib/domain/roles.ts` | `tests/domain/roles.test.ts` |
 | FR-02 | `src/lib/domain/user.ts` | `tests/domain/user.test.ts` |
@@ -86,36 +76,32 @@ Chaque exigence est reliée à son implémentation et à ses tests. Extrait init
 | FR-40 / FR-41 | `src/lib/domain/payment.ts`, `enrollment.ts` | `tests/domain/payment.test.ts`, `enrollment.test.ts` |
 | FR-47 | `src/lib/domain/invoice.ts` | `tests/domain/invoice.test.ts` |
 
-La matrice complète est tenue à jour à chaque ajout d'exigence.
+The full matrix is kept up to date with each added requirement.
 
----
+## 6. Risk management (initial register)
 
-## 6. Gestion des risques (registre initial)
+| Id | Risk | Severity | Mitigation |
+|----|------|---------|------------|
+| R-01 | Payoneer integration mode to confirm (semi-manual payment request vs automated checkout) and availability for an Estonian merchant | Medium | Validate the exact Payoneer product; the semi-manual flow fits the "account created by admin" model. |
+| R-02 | Inaccurate/outdated EU VAT rates (OSS) | High | Versioned table + official re-validation before prod. |
+| R-03 | LLM cost out of budget | Medium | Monthly tracking, alert at €80, generation cache. |
+| R-04 | Anti-copy bypassed (capture) | Medium | Deterrence + logging; no false promise of impermeability. |
+| R-05 | Access leak between tutors | High | Per-payer access control tested systematically. |
+| R-06 | GDPR non-compliance | Medium | Consent, minimization, right to erasure. |
 
-| Id | Risque | Gravité | Mitigation |
-|----|--------|---------|------------|
-| R-01 | Mode d'intégration Payoneer à confirmer (demande de paiement semi-manuelle vs checkout automatisé) et disponibilité pour un commerçant estonien | Moyenne | Valider le produit Payoneer exact ; le flux semi-manuel convient au modèle « compte créé par l'admin ». |
-| R-02 | Taux de TVA UE inexacts/obsolètes (OSS) | Haute | Table versionnée + re-validation officielle avant prod. |
-| R-03 | Coût LLM hors budget | Moyenne | Suivi mensuel, alerte à 80 €, cache des générations. |
-| R-04 | Anti-copie contournée (capture) | Moyenne | Dissuasion + journalisation ; pas de fausse promesse d'imperméabilité. |
-| R-05 | Fuite d'accès entre tuteurs | Haute | Contrôle d'accès par payeur testé systématiquement. |
-| R-06 | Non-conformité RGPD | Moyenne | Consentement, minimisation, droit à l'effacement. |
+## 7. Measures and indicators
 
----
+- Domain test coverage (target: ≥ 80% on `domain`).
+- Defects per delivery.
+- Cycle time (requirement → delivered).
+- Monthly LLM spend (threshold: €100).
+- p95 response time (threshold: 1.5 s).
 
-## 7. Mesures et indicateurs
+## 8. Configuration management
 
-- Couverture des tests du domaine (objectif : ≥ 80 % sur `domain`).
-- Nombre de défauts par livraison.
-- Temps de cycle (exigence → livrée).
-- Dépense LLM mensuelle (seuil : 100 €).
-- Temps de réponse p95 (seuil : 1,5 s).
-
----
-
-## 8. Gestion de configuration
-
-- Code sous Git (branche `main` protégée, commits atomiques).
-- Versionnement sémantique.
-- Secrets hors du dépôt (`.env`, `.dev.vars`, jamais commités).
-- Documents de spec versionnés avec le code.
+- Code under Git (protected `main` branch, atomic commits).
+- Semantic versioning.
+- Secrets out of the repo (`.env`, `.dev.vars`, never committed).
+- Spec documents versioned with the code.
+- **Definition of Done per milestone**: a milestone is marked `✅ delivered` only when the local integration test (Vitest) **and** the production smoke test (HTTP) both pass.
+- **SBOM per milestone**: `docs/devlog/mN/SBOM.md` (or generated in CI at the `v0.N.0` tag).

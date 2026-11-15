@@ -1,204 +1,202 @@
-# Manuel de test — GeberLMS v0.1.0 (milestone m1)
+# Test manual — GeberLMS v0.1.0 (milestone m1)
 
-> **Version** : 0.1.0 · **Milestone** : m1
-> **Git** : branche `main` · tag `v0.1.0`
-> **Date** : 2026-11-01
+> **Version**: 0.1.0 · **Milestone**: m1
+> **Git**: `main` branch · tag `v0.1.0`
+> **Date**: 2026-11-01
 
-Test manuel de la version 0.1.0 en environnement **local** (D1 locale via Wrangler).
+Manual testing of version 0.1.0 in a **local** environment (local D1 via Wrangler).
 
 ---
 
-## 1. Prérequis
+## 1. Prerequisites
 
 - Node ≥ 20, npm ≥ 9
-- Dépôt cloné + `npm install` effectué
+- Cloned repo + `npm install` done
 
-## 2. Mise en place de la base locale
+## 2. Local database setup
 
-Exécuter dans l'ordre, à la racine du dépôt :
+Run in order, at the repo root:
 
 ```bash
-# 1. appliquer toutes les migrations (0001 → 0006)
+# 1. apply all migrations (0001 → 0006)
 for f in migrations/*.sql; do npx wrangler d1 execute DB --local --file "$f"; done
 
-# 2. créer l'admin
+# 2. create the admin
 SEED_ADMIN_EMAIL=admin@example.com SEED_ADMIN_PASSWORD=changeme npx tsx scripts/seed-admin.ts
 
-# 3. créer les données de démo (tuteur + apprenant + 1 cours + 1 inscription)
+# 3. create demo data (tutor + learner + 1 course + 1 enrollment)
 npx tsx scripts/seed-demo.ts
 ```
 
-## 3. Démarrage
+## 3. Startup
 
 ```bash
-
 npm run dev
 ```
 
-Ouvrir : **http://localhost:5173**
+Open: **http://localhost:5173**
 
-## 4. Comptes de test
+## 4. Test accounts
 
 - **Admin** — `admin@example.com` / `changeme`
-- **Tuteur** — `tutor@demo.ee` / `DemoTutor123!`
-- **Apprenant** — `learner@demo.ee` / `DemoLearner123!`
+- **Tutor** — `tutor@demo.ee` / `DemoTutor123!`
+- **Learner** — `learner@demo.ee` / `DemoLearner123!`
 
-> ⚠️ Ces mots de passe sont volontairement faibles (démo, dépôt public). Ne pas réutiliser en production.
+> ⚠️ These passwords are intentionally weak (demo, public repo). Do not reuse in production.
 
-## 5. Vérifications automatiques (optionnel)
+## 5. Automated checks (optional)
 
 ```bash
-npm test            # 206 tests domaine (Vitest)
-npm run typecheck   # typage de la logique métier pure (tsconfig.domain.json)
-npm run check       # svelte-check (typage app + serveur, tsconfig.json)
-npm run build       # build adapter-cloudflare
+npm test            # 206 domain tests (Vitest)
+npm run typecheck   # pure business-logic typing (tsconfig.domain.json)
+npm run check       # svelte-check (app + server typing, tsconfig.json)
+npm run build       # adapter-cloudflare build
 ```
 
-> Note : `tsconfig.json` (racine) étend `.svelte-kit/tsconfig.json` et couvre l'app
-> (Svelte + serveur). `tsconfig.domain.json` couvre uniquement `src/lib/domain` + `tests`.
+> Note: `tsconfig.json` (root) extends `.svelte-kit/tsconfig.json` and covers the app
+> (Svelte + server). `tsconfig.domain.json` covers only `src/lib/domain` + `tests`.
 
 ## 5.1 Frontend — shadcn-svelte + Tailwind v4
 
-- UI construite sur **shadcn-svelte** (primitives `bits-ui`) + **Tailwind CSS v4** (config
-  CSS-first dans `src/app.css` via `@theme` — pas de `tailwind.config.ts`).
-- `components.json` : base `stone`, style `nova`, icônes `lucide`, alias `$lib`.
-- Composants générés dans `src/lib/components/ui/` (38 composants) — ajout :
-  `npx shadcn-svelte@latest add <composant>`.
-- Derniers ajouts : `carousel` (embla-carousel-svelte), `chart` (layerchart),
+- UI built on **shadcn-svelte** (`bits-ui` primitives) + **Tailwind CSS v4** (CSS-first
+  config in `src/app.css` via `@theme` — no `tailwind.config.ts`).
+- `components.json`: base `stone`, style `nova`, icons `lucide`, alias `$lib`.
+- Components generated in `src/lib/components/ui/` (38 components) — add:
+  `npx shadcn-svelte@latest add <component>`.
+- Latest additions: `carousel` (embla-carousel-svelte), `chart` (layerchart),
   `calendar`, `resizable` (paneforge), `toggle`.
-- Polices : Inter Variable (`--font-sans`) + Sora (`--font-display`) via Fontsource.
-- Thème clair/sombre via `mode-watcher` (variante `.dark`).
-- Layout App Shell (Sidebar + Topbar) dans `src/lib/components/layout/`.
+- Fonts: Inter Variable (`--font-sans`) + Sora (`--font-display`) via Fontsource.
+- Light/dark theme via `mode-watcher` (`.dark` variant).
+- App Shell layout (Sidebar + Topbar) in `src/lib/components/layout/`.
 
 ---
 
-## 6. Scénarios de test
+## 6. Test scenarios
 
-### 6.0 — Parcours guidé (fil conducteur)
+### 6.0 — Guided walkthrough (thread)
 
-Enchaînement de bout en bout, à suivre dans l'ordre (**admin → tuteur → apprenant**).
-Chaque étape : l'action, puis le point de contrôle « ✅ Vérifie ». Détail des écrans : voir 6.2 → 6.9.
+End-to-end sequence, to follow in order (**admin → tutor → learner**).
+Each step: the action, then the "✅ Check" control point. Screen details: see 6.2 → 6.9.
 
-#### Acte 1 — Admin (`admin@example.com` / `changeme`)
+#### Act 1 — Admin (`admin@example.com` / `changeme`)
 
-1. **Connexion** : `/login` → Email + Mot de passe → « Se connecter ».
-   ✅ redirection `/admin/courses` ; sidebar à 6 items.
-2. **Créer un cours** (6.2) : « Nouveau cours » → Titre `Anglais professionnel`,
-   Slug `en-pro`, Langue `en`, Prix (centimes) `5000` → « Créer ».
-   ✅ le cours apparaît (`€50`).
-3. **Structurer** (6.2) : dans le cours, « Ajouter un module » (`Module 1`), puis
-   « Ajouter une leçon » (`Leçon 1`, type `text`) et (`Quiz 1`, type `quiz`), puis
-   « Ajouter une ressource » (`PDF support`).
-   ✅ arborescence Cours → Module → 2 leçons → 1 ressource.
-4. **Créer un coupon** (6.5) : « Coupons » → « Nouveau coupon » → Code `BIENVENUE10`,
-   Type `%`, Valeur `10` → « Créer ».
-   ✅ `BIENVENUE10 — 10 %` dans « Existants ».
-5. **Inscrire** (6.4) : « Inscrire un apprenant à un cours » → Email `learner@demo.ee`,
-   Cours `Anglais professionnel`, Coupon `BIENVENUE10` → « Inscrire ».
-   ✅ « Inscription créée — total 54 €. »
-6. **Marquer payé** (6.6) : « Inscriptions & paiements » → « Marquer payé (Payoneer) ».
-   ✅ « Paiement confirmé — facture INV-… ».
-7. *(Optionnel)* **Quiz** (6.7) : ajouter une question sur `Quiz 1` — ne pas cliquer
-   « Générer (IA) » (coût).
-8. **Déconnexion** : menu avatar (haut droite) → « Déconnexion ».
+1. **Login**: `/login` → Email + Password → "Se connecter".
+   ✅ redirect `/admin/courses`; sidebar with 6 items.
+2. **Create a course** (6.2): "Nouveau cours" → Title `Anglais professionnel`,
+   Slug `en-pro`, Language `en`, Price (cents) `5000` → "Créer".
+   ✅ the course appears (`€50`).
+3. **Structure** (6.2): in the course, "Ajouter un module" (`Module 1`), then
+   "Ajouter une leçon" (`Leçon 1`, type `text`) and (`Quiz 1`, type `quiz`), then
+   "Ajouter une ressource" (`PDF support`).
+   ✅ tree Course → Module → 2 lessons → 1 resource.
+4. **Create a coupon** (6.5): "Coupons" → "Nouveau coupon" → Code `BIENVENUE10`,
+   Type `%`, Value `10` → "Créer".
+   ✅ `BIENVENUE10 — 10 %` in "Existants".
+5. **Enroll** (6.4): "Inscrire un apprenant à un cours" → Email `learner@demo.ee`,
+   Course `Anglais professionnel`, Coupon `BIENVENUE10` → "Inscrire".
+   ✅ "Inscription créée — total 54 €."
+6. **Mark paid** (6.6): "Inscriptions & paiements" → "Marquer payé (Payoneer)".
+   ✅ "Paiement confirmé — facture INV-…".
+7. *(Optional)* **Quiz** (6.7): add a question on `Quiz 1` — do not click
+   "Générer (IA)" (cost).
+8. **Logout**: avatar menu (top right) → "Déconnexion".
 
-#### Acte 2 — Tuteur (`tutor@demo.ee` / `DemoTutor123!`)
+#### Act 2 — Tutor (`tutor@demo.ee` / `DemoTutor123!`)
 
-9. **Connexion** → ✅ redirection `/tutor`, sidebar à 1 item.
-10. **Dashboard** (6.8) → ✅ `Élève Démo` listé avec progression `x/y leçons`.
-11. **Déconnexion**.
+9. **Login** → ✅ redirect `/tutor`, sidebar with 1 item.
+10. **Dashboard** (6.8) → ✅ `Élève Démo` listed with `x/y lessons` progress.
+11. **Logout**.
 
-#### Acte 3 — Apprenant (`learner@demo.ee` / `DemoLearner123!`)
+#### Act 3 — Learner (`learner@demo.ee` / `DemoLearner123!`)
 
-12. **Connexion** → ✅ redirection `/learner`.
-13. **Dashboard** (6.9) → ✅ « Français débutant » + « Anglais professionnel » listés.
-14. **Progression** (6.9) : « Marquer terminée » sur une leçon → ✅ compteur `x/y` augmente.
-15. *(Si 7 faite)* **Quiz** (6.9) : répondre → « Valider le quiz » → ✅ score affiché.
-16. *(Optionnel)* **Upload** (6.9) : « Mes documents » → fichier → « Déposer ».
-17. **Déconnexion**.
+12. **Login** → ✅ redirect `/learner`.
+13. **Dashboard** (6.9) → ✅ "Français débutant" + "Anglais professionnel" listed.
+14. **Progress** (6.9): "Marquer terminée" on a lesson → ✅ `x/y` counter increases.
+15. *(If 7 done)* **Quiz** (6.9): answer → "Valider le quiz" → ✅ score displayed.
+16. *(Optional)* **Upload** (6.9): "Mes documents" → file → "Déposer".
+17. **Logout**.
 
-### 6.1 Global / transversal
+### 6.1 Global / cross-cutting
 
-- Se connecter, puis vérifier l'aiguillage par rôle :
+- Log in, then check role-based routing:
   - admin → `/admin/courses`
-  - tuteur → `/tutor`
-  - apprenant → `/learner`
-- **Langue** : sélecteur en haut à droite — FR / EN / AR / DE.
-  - En **arabe**, l'interface passe en **RTL** (direction droite→gauche).
-- **Thème** : bascule clair/sombre (icône soleil/lune dans la topbar).
-- **Sidebar** : navigation adaptée au rôle (items différents admin/tuteur/apprenant).
-- **Déconnexion** : menu avatar (en haut à droite) → « Déconnexion » → retour `/login`.
-- **Erreur de connexion** : identifiants invalides → alerte rouge sur la page login.
+  - tutor → `/tutor`
+  - learner → `/learner`
+- **Language**: selector top right — FR / EN / AR / DE.
+  - In **Arabic**, the interface switches to **RTL** (right-to-left).
+- **Theme**: light/dark toggle (sun/moon icon in the topbar).
+- **Sidebar**: role-adapted navigation (different items admin/tutor/learner).
+- **Logout**: avatar menu (top right) → "Déconnexion" → back to `/login`.
+- **Login error**: invalid credentials → red alert on the login page.
 
-### 6.2 Admin — Gestion des cours (`/admin/courses`)
+### 6.2 Admin — Course management (`/admin/courses`)
 
-- Créer un cours : titre, slug, langue (fr/en/ar/de), prix **en centimes** (0 = gratuit).
-- Renommer, **masquer/afficher** (visibilité), supprimer un cours.
-- Dans un cours : ajouter des **modules** (titre + position), des **leçons** (type video / text / quiz), des **ressources** (titre).
-- Renommer / masquer / supprimer modules, leçons, ressources.
-- La suppression d'un cours avec des inscriptions est refusée (message d'erreur).
+- Create a course: title, slug, language (fr/en/ar/de), price **in cents** (0 = free).
+- Rename, **hide/show** (visibility), delete a course.
+- In a course: add **modules** (title + position), **lessons** (type video / text / quiz), **resources** (title).
+- Rename / hide / delete modules, lessons, resources.
+- Deleting a course with enrollments is refused (error message).
 
-### 6.3 Admin — Utilisateurs (`/admin/users`)
+### 6.3 Admin — Users (`/admin/users`)
 
-- Créer un compte : email, nom, mot de passe, rôle (apprenant / tuteur), option « self-payer ».
-- Rappel FR-03 : pas d'inscription publique — seul l'admin crée les comptes.
+- Create an account: email, name, password, role (learner / tutor), "self-payer" option.
+- FR-03 reminder: no public registration — only the admin creates accounts.
 
-### 6.4 Admin — Inscription (`/admin/enroll`)
+### 6.4 Admin — Enrollment (`/admin/enroll`)
 
-- Inscrire un apprenant (par son email) à un cours.
-- Coupon optionnel : le prix affiché intègre remise + TVA.
+- Enroll a learner (by their email) in a course.
+- Optional coupon: the displayed price includes discount + VAT.
 
 ### 6.5 Admin — Coupons (`/admin/coupons`)
 
-- Créer un coupon : code, type (**%** ou **montant**), valeur, date d'expiration, nombre max d'utilisations.
-- Lister les coupons, activer/désactiver.
+- Create a coupon: code, type (**%** or **amount**), value, expiry date, max uses.
+- List coupons, enable/disable.
 
-### 6.6 Admin — Paiements (`/admin/payments`)
+### 6.6 Admin — Payments (`/admin/payments`)
 
-- Lister les inscriptions et paiements.
-- « Marquer comme payé (Payoneer) » → confirme le paiement et génère un numéro de facture (TVA).
+- List enrollments and payments.
+- "Marquer payé (Payoneer)" → confirms the payment and generates a (VAT) invoice number.
 
 ### 6.7 Admin — Quiz (`/admin/quizzes`)
 
-- Lister les leçons de type **quiz** (avec leur cours/module).
-- Ajouter une question : énoncé, réponses (une par ligne), index de la bonne réponse (0 = première), points.
-- « Générer (IA) » : génération de questions via Workers AI (nécessite le binding `AI`).
+- List `quiz`-type lessons (with their course/module).
+- Add a question: prompt, answers (one per line), correct-answer index (0 = first), points.
+- "Générer (IA)": question generation via Workers AI (requires the `AI` binding).
 
-### 6.8 Tuteur (`/tutor`)
+### 6.8 Tutor (`/tutor`)
 
-- Tableau de bord : liste des apprenants **financés** (liens de tutelle) et leur progression par cours/leçon.
+- Dashboard: list of **funded** learners (guardianship links) and their per-course/lesson progress.
 
-### 6.9 Apprenant (`/learner`)
+### 6.9 Learner (`/learner`)
 
-- Tableau de bord : cours inscrits, leçons et progression (x/y leçons).
-- « Marquer comme terminé » sur une leçon → met à jour la progression.
-- Répondre à un **quiz** (QCM) → score affiché (correct/total + %).
-- **Upload** de documents (stockage R2), rattachés optionnellement à une leçon.
-
----
-
-## 7. Données de démo incluses (`seed-demo.ts`)
-
-- Utilisateurs : `tutor@demo.ee` (tuteur), `learner@demo.ee` (apprenant).
-- 1 lien de tutelle tuteur → apprenant.
-- 1 cours « Français débutant » (fr, 100,00 € HT, public), 1 module, 1 leçon (type **text**), 1 inscription active.
-
-> Le seed de démo ne contient **pas** de quiz : pour tester le quiz apprenant, créer d'abord une leçon de type `quiz` + des questions côté admin (6.7).
+- Dashboard: enrolled courses, lessons and progress (x/y lessons).
+- "Marquer terminée" on a lesson → updates progress.
+- Answer a **quiz** (MCQ) → displayed score (correct/total + %).
+- **Upload** documents (R2 storage), optionally attached to a lesson.
 
 ---
 
-## 8. Limitations connues de la v0.1.0
+## 7. Included demo data (`seed-demo.ts`)
 
-- **Refonte frontend en cours** (blueprint validé 2026-10-09) : catalogue public,
-  lecteur de cours et dashboard apprenant à implémenter sur la base des composants
-  shadcn-svelte générés (38 composants, dont carousel/chart/calendar/resizable/toggle).
-- Le lien **« Catalogue »** de la sidebar apprenant pointe vers `/catalog`, route
-  **pas encore créée** → 404 (prévue dans le blueprint, à venir).
-- Seule la page **login** a le design shadcn « premium » ; les autres pages sont encore
-  l'ancien markup (à l'intérieur du nouveau shell sidebar/topbar).
-- Les champs catalogue ajoutés en base (migration 0006 : description, vignette, catégorie,
-  niveau, visibilité publique, tuteur) ne sont **pas encore exposés** dans l'UI admin.
-- **Non implémenté** : anti-copie (NFR-10), RGPD (NFR-08 : consentement/effacement),
-  suivi budget LLM (NFR-06).
-- La génération de quiz par IA (Workers AI) peut entraîner des coûts et nécessite
-  l'accès au binding `AI`.
+- Users: `tutor@demo.ee` (tutor), `learner@demo.ee` (learner).
+- 1 tutor → learner guardianship link.
+- 1 course "Français débutant" (fr, €100.00 excl. VAT, public), 1 module, 1 lesson (type **text**), 1 active enrollment.
+
+> The demo seed contains **no** quiz: to test the learner quiz, first create a `quiz`-type lesson + questions on the admin side (6.7).
+
+---
+
+## 8. Known limitations of v0.1.0
+
+- **Frontend redesign in progress** (blueprint validated 2026-10-09): public catalog,
+  course reader and learner dashboard to be implemented on the generated shadcn-svelte
+  components (38 components, incl. carousel/chart/calendar/resizable/toggle).
+- The learner sidebar's **"Catalogue"** link points to `/catalog`, a route
+  **not yet created** → 404 (planned in the blueprint, coming).
+- Only the **login** page has the shadcn "premium" design; the other pages still use
+  the old markup (inside the new sidebar/topbar shell).
+- The catalog fields added in the DB (migration 0006: description, thumbnail, category,
+  level, public visibility, tutor) are **not yet exposed** in the admin UI.
+- **Not implemented**: anti-copy (NFR-10), GDPR (NFR-08: consent/erasure),
+  LLM budget tracking (NFR-06).
+- AI quiz generation (Workers AI) may incur costs and requires access to the `AI` binding.

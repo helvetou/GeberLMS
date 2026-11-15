@@ -1,29 +1,28 @@
 # SBOM — Milestone m6 (v0.6.0)
 
-Software Bill of Materials du milestone **m6** — GeberLMS v0.6.0.
+Software Bill of Materials of milestone **m6** — GeberLMS v0.6.0.
 
-## Métadonnées
+## Metadata
 
-- **Milestone** : m6
-- **Version** : 0.6.0
-- **Tag** : v0.6.0 (à poser à la livraison)
-- **Date** : —
-- **Statut** : planifié
+- **Milestone**: m6
+- **Version**: 0.6.0
+- **Tag**: v0.6.0 (to set at delivery)
+- **Date**: —
+- **Status**: planned
 
-## Base héritée
+## Inherited base
 
-Le SBOM de référence est celui de m1 : [`../m1/SBOM.md`](../m1/SBOM.md).
-Ce milestone hérite de cette base et ajoute ou modifie les composants ci-dessous.
+The reference SBOM is m1's: [`../m1/SBOM.md`](../m1/SBOM.md).
+This milestone inherits that base and adds or modifies the components below.
 
-## Composants anticipés (à confirmer à la livraison)
+## Anticipated components (to confirm at delivery)
 
-- **Routes** : — (refonte admin/users, enroll, coupons, payments, quizzes)
-- **Composants UI** : formulaires (réutilise m5)
-- **Dépendances** : réutilise m5 (formsnap/superforms/zod)
-- **Notes** : toggle activer/désactiver des coupons (corrige audit §7.2)
+- **Routes**: — (redesign)
+- **UI components**: stat-card, continue-learning, progress-list, activity-feed
+- **Dependencies**: none new
+- **Notes**: learner + tutor dashboards
 
-## À compléter à la livraison
+## To fill in at delivery
 
-Renseigner les versions exactes des dépendances, lister les nouveaux modules
-premier-party (`src/lib/domain`, `src/lib/server`, `src/lib/components`)
-et re-vérifier l'ensemble du SBOM après implémentation.
+Record the exact dependency versions, list the new first-party modules
+(`src/lib/domain`, `src/lib/server`, `src/lib/components`) and re-verify the whole SBOM after implementation.

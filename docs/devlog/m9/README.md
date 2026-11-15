@@ -1,16 +1,16 @@
 # Devlog — Milestone m9 (v0.9.0)
 
-Journal de développement du milestone **m9** — GeberLMS v0.9.0.
+Development journal of milestone **m9** — GeberLMS v0.9.0.
 
-## Métadonnées
+## Metadata
 
-- **Milestone** : m9
-- **Version** : 0.9.0
-- **Tag** : v0.9.0 (à poser à la livraison)
-- **Scope** : Tests E2E & audit — Playwright, audit complet, couverture ≥ 80 %, perf
+- **Milestone**: m9
+- **Version**: 0.9.0
+- **Tag**: v0.9.0 (to set at delivery)
+- **Scope**: Full E2E tests & audit — complete Playwright suite, replayed audit, coverage ≥ 80 %, p95 < 1.5 s
 
-## Contenu
+## Content
 
-- [`test-log.md`](test-log.md) — expérience de test.
+- [`test-log.md`](test-log.md) — test experience.
 - [`feedback.md`](feedback.md) — feedback.
-- [`howto/`](howto/) — petits tutos.
+- [`howto/`](howto/) — small tutorials.

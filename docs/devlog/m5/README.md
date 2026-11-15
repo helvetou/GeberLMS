@@ -1,16 +1,16 @@
 # Devlog — Milestone m5 (v0.5.0)
 
-Journal de développement du milestone **m5** — GeberLMS v0.5.0.
+Development journal of milestone **m5** — GeberLMS v0.5.0.
 
-## Métadonnées
+## Metadata
 
-- **Milestone** : m5
-- **Version** : 0.5.0
-- **Tag** : v0.5.0 (à poser à la livraison)
-- **Scope** : Admin contenu — tables + formulaire formsnap/superforms/zod, CRUD cours/modules/leçons/ressources
+- **Milestone**: m5
+- **Version**: 0.5.0
+- **Tag**: v0.5.0 (to set at delivery)
+- **Scope**: Course reader — lesson-player, curriculum, resource-sheet, quiz-player, progress, basic anti-copy
 
-## Contenu
+## Content
 
-- [`test-log.md`](test-log.md) — expérience de test.
+- [`test-log.md`](test-log.md) — test experience.
 - [`feedback.md`](feedback.md) — feedback.
-- [`howto/`](howto/) — petits tutos.
+- [`howto/`](howto/) — small tutorials.

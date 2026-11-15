@@ -1,16 +1,16 @@
 # Devlog — Milestone m4 (v0.4.0)
 
-Journal de développement du milestone **m4** — GeberLMS v0.4.0.
+Development journal of milestone **m4** — GeberLMS v0.4.0.
 
-## Métadonnées
+## Metadata
 
-- **Milestone** : m4
-- **Version** : 0.4.0
-- **Tag** : v0.4.0 (à poser à la livraison)
-- **Scope** : Dashboards redesign — apprenant + tuteur
+- **Milestone**: m4
+- **Version**: 0.4.0
+- **Tag**: v0.4.0 (to set at delivery)
+- **Scope**: Public catalog — /catalog route, 0006 fields, search/filters, public visibility
 
-## Contenu
+## Content
 
-- [`test-log.md`](test-log.md) — expérience de test.
+- [`test-log.md`](test-log.md) — test experience.
 - [`feedback.md`](feedback.md) — feedback.
-- [`howto/`](howto/) — petits tutos.
+- [`howto/`](howto/) — small tutorials.

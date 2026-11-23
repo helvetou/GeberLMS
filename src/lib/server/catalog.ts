@@ -2,7 +2,7 @@ import { and, eq, inArray } from 'drizzle-orm';
 import type { DB } from './db';
 import { courses, modules, lessons, resources, enrollments, progress } from './db/schema';
 import { isContentType, isLanguage, isVisibility, type Visibility } from '$lib/domain/content';
-import { nestCatalog, publicCourses, type Course, type CourseNode } from '$lib/domain/catalog';
+import { nestCatalog, publicCourses, visibleSyllabus, type Course, type CourseNode, type PublicSyllabusModule } from '$lib/domain/catalog';
 import { ErrorCodes, type ErrorCode } from '$lib/domain/errors';
 
 export class CatalogServiceError extends Error {
@@ -144,6 +144,32 @@ export async function setCoursePublic(db: DB, id: string, isPublic: boolean): Pr
 export async function listPublicCatalog(db: DB): Promise<Course[]> {
   const courseRows = await db.select().from(courses).all();
   return publicCourses({ courses: courseRows, modules: [], lessons: [], resources: [] });
+}
+
+export interface PublicCourseDetail {
+  course: Course;
+  syllabus: PublicSyllabusModule[];
+}
+
+/** Détail public d'un cours (anonyme) : métadonnées + plan de cours visible. */
+export async function getPublicCourseBySlug(
+  db: DB,
+  slug: string,
+): Promise<PublicCourseDetail | null> {
+  const course = await db.select().from(courses).where(eq(courses.slug, slug)).get();
+  if (!course || course.visibility !== 'visible' || !course.isPublic) return null;
+
+  const moduleRows = await db.select().from(modules).where(eq(modules.courseId, course.id)).all();
+  const moduleIds = moduleRows.map((m) => m.id);
+  const lessonRows = moduleIds.length
+    ? await db.select().from(lessons).where(inArray(lessons.moduleId, moduleIds)).all()
+    : [];
+
+  const syllabus = visibleSyllabus(
+    { courses: [course], modules: moduleRows, lessons: lessonRows, resources: [] },
+    course.id,
+  );
+  return { course, syllabus };
 }
 
 export async function deleteCourse(db: DB, id: string): Promise<void> {

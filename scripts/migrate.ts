@@ -1,11 +1,10 @@
 /**
  * Runner de migrations idempotent pour D1 (audit §7.3).
  *
- * Contrairement à un `for f in migrations/*.sql; do wrangler d1 execute …; done`,
- * ce runner trace les migrations déjà appliquées dans une table
- * `schema_migrations`, ce qui rend le re-jeu sans effet et sans erreur
- * (notamment pour les migrations `ALTER TABLE`, qui ne supportent pas
- * `IF NOT EXISTS` en SQLite).
+ * Trace les migrations appliquées dans `schema_migrations` et tolère une base
+ * déjà migrée « à la main » : les migrations CREATE sont idempotentes
+ * (`IF NOT EXISTS`), et les migrations `ALTER TABLE … ADD COLUMN` sont
+ * détectées comme déjà appliquées via l'erreur « duplicate column ».
  *
  * Usage :
  *   npx tsx scripts/migrate.ts            # base locale (binding DB)
@@ -29,7 +28,7 @@ interface WranglerResult {
 
 function exec(args: string[]): string {
   return execFileSync('npx', ['wrangler', 'd1', 'execute', target, mode, ...args], {
-    stdio: ['ignore', 'pipe', 'inherit'],
+    stdio: ['ignore', 'pipe', 'pipe'],
     encoding: 'utf8',
     cwd: process.cwd(),
   });
@@ -64,56 +63,50 @@ function migrationFiles(): string[] {
     .sort();
 }
 
+/** Applique un fichier de migration, en tolérant qu'il soit déjà appliqué. */
+function applyFile(file: string): boolean {
+  try {
+    exec(['--file', join(MIGRATIONS_DIR, file)]);
+    return true;
+  } catch (err) {
+    const detail = `${(err as { stderr?: string }).stderr ?? ''} ${String(err)}`;
+    if (/already exists|duplicate column/i.test(detail)) {
+      return false; // déjà appliqué
+    }
+    throw err;
+  }
+}
+
 function main(): void {
   command(
     `CREATE TABLE IF NOT EXISTS ${TRACKING_TABLE} ` +
       `(name TEXT PRIMARY KEY, applied_at TEXT NOT NULL)`,
   );
 
-  let applied = firstColumn(
-    execJson(['--command', `SELECT name FROM ${TRACKING_TABLE}`]),
-  );
+  const applied = new Set(firstColumn(execJson(['--command', `SELECT name FROM ${TRACKING_TABLE}`])));
 
-  // Bootstrap : une base déjà migrée à la main (sans table de suivi) est
-  // considérée comme à jour pour toutes les migrations existantes.
-  if (applied.length === 0) {
-    const users = firstColumn(
-      execJson([
-        '--command',
-        `SELECT name FROM sqlite_master WHERE type='table' AND name='users'`,
-      ]),
+  let ran = 0;
+  let skipped = 0;
+  for (const file of migrationFiles()) {
+    if (applied.has(file)) continue;
+    const appliedNow = applyFile(file);
+    command(
+      `INSERT OR IGNORE INTO ${TRACKING_TABLE} (name, applied_at) ` +
+        `VALUES ('${file}', datetime('now'))`,
     );
-    if (users.length > 0) {
-      for (const file of migrationFiles()) {
-        command(
-          `INSERT INTO ${TRACKING_TABLE} (name, applied_at) ` +
-            `VALUES ('${file}', datetime('now'))`,
-        );
-      }
-      console.log(
-        `Base déjà migrée : ${migrationFiles().length} migration(s) marquée(s) comme appliquée(s).`,
-      );
-      return;
+    if (appliedNow) {
+      console.log(`→ ${file}`);
+      ran += 1;
+    } else {
+      console.log(`· ${file} (déjà appliquée — marquée)`);
+      skipped += 1;
     }
   }
 
-  const appliedSet = new Set(applied);
-  let ran = 0;
-  for (const file of migrationFiles()) {
-    if (appliedSet.has(file)) continue;
-    console.log(`→ ${file}`);
-    exec(['--file', join(MIGRATIONS_DIR, file)]);
-    command(
-      `INSERT INTO ${TRACKING_TABLE} (name, applied_at) ` +
-        `VALUES ('${file}', datetime('now'))`,
-    );
-    ran += 1;
-  }
-
   console.log(
-    ran === 0
+    ran === 0 && skipped === 0
       ? 'Aucune migration à appliquer (base à jour).'
-      : `${ran} migration(s) appliquée(s).`,
+      : `${ran} appliquée(s), ${skipped} déjà présente(s).`,
   );
 }
 

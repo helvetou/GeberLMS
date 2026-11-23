@@ -18,6 +18,8 @@ import {
   resourcesOfLesson,
   visibleLessonsOfCourse,
   publicCourses,
+  filterCourses,
+  visibleSyllabus,
   nestCatalog,
   renameCourse,
   renameModule,
@@ -281,5 +283,54 @@ describe('rename (FR-11)', () => {
 
   it('renames a resource', () => {
     expect(renameResource(withResource, 'r1', 'Ressource renommée').resources[0]?.title).toBe('Ressource renommée');
+  });
+});
+
+describe('filterCourses (m4 — catalogue public)', () => {
+  const courses: Course[] = [
+    { id: 'c1', slug: 'a', title: 'Verilog FPGA', language: 'fr', visibility: 'visible', category: 'fpga', level: 'debutant', description: 'Conception numérique' },
+    { id: 'c2', slug: 'b', title: 'Embedded Systems', language: 'en', visibility: 'visible', category: 'embarque', level: 'avance', description: 'RTOS & drivers' },
+    { id: 'c3', slug: 'c', title: 'IoT basics', language: 'en', visibility: 'visible', category: 'iot', level: 'debutant', description: 'Capteurs et connectivité' },
+  ];
+
+  it('filters by category', () => {
+    expect(filterCourses(courses, { category: 'fpga' }).map((c) => c.id)).toEqual(['c1']);
+  });
+
+  it('filters by level', () => {
+    expect(filterCourses(courses, { level: 'debutant' }).map((c) => c.id)).toEqual(['c1', 'c3']);
+  });
+
+  it('filters by language', () => {
+    expect(filterCourses(courses, { language: 'en' }).map((c) => c.id)).toEqual(['c2', 'c3']);
+  });
+
+  it('searches across title and description (case-insensitive)', () => {
+    expect(filterCourses(courses, { query: 'fpga' }).map((c) => c.id)).toEqual(['c1']);
+    expect(filterCourses(courses, { query: 'RTOS' }).map((c) => c.id)).toEqual(['c2']);
+  });
+
+  it('combines filters', () => {
+    expect(filterCourses(courses, { language: 'en', level: 'debutant' }).map((c) => c.id)).toEqual(['c3']);
+  });
+
+  it('returns everything with no filters', () => {
+    expect(filterCourses(courses, {})).toHaveLength(3);
+  });
+});
+
+describe('visibleSyllabus (m4)', () => {
+  it('returns visible modules and their visible lessons in order', () => {
+    let cat = emptyCatalog();
+    cat = addCourse(cat, { id: 'c', slug: 's', title: 'T', language: 'fr', visibility: 'visible', isPublic: true });
+    cat = addModule(cat, { id: 'm1', courseId: 'c', title: 'M1', visibility: 'visible', position: 0 });
+    cat = addModule(cat, { id: 'm2', courseId: 'c', title: 'M2', visibility: 'visible', position: 1 });
+    cat = addLesson(cat, { id: 'l1', moduleId: 'm1', title: 'L1', type: 'text', visibility: 'visible', position: 0 });
+    cat = addLesson(cat, { id: 'l2', moduleId: 'm1', title: 'L2', type: 'text', visibility: 'hidden', position: 1 });
+    cat = addLesson(cat, { id: 'l3', moduleId: 'm2', title: 'L3', type: 'video', visibility: 'visible', position: 0 });
+
+    const syllabus = visibleSyllabus(cat, 'c');
+    expect(syllabus.map((s) => s.module.id)).toEqual(['m1', 'm2']);
+    expect(syllabus[0]!.lessons.map((l) => l.id)).toEqual(['l1']); // l2 est cachée
   });
 });

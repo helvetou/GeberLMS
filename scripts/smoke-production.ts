@@ -23,6 +23,8 @@ const CHECKS: Check[] = [
   { name: 'GET /login → 200', path: '/login', statuses: [200] },
   // Racine : anonyme → redirection vers /login (aiguillage par rôle).
   { name: 'GET / → redirect /login', path: '/', statuses: [301, 302, 303, 307, 308], locationContains: '/login' },
+  // Catalogue public (m4) accessible aux anonymes.
+  { name: 'GET /catalog → 200', path: '/catalog', statuses: [200] },
 ];
 
 async function main(): Promise<void> {

@@ -288,3 +288,43 @@ export function visibleLessonsOfCourse(catalog: Catalog, courseId: string): Less
 export function publicCourses(catalog: Catalog): Course[] {
   return catalog.courses.filter((c) => c.visibility === 'visible' && c.isPublic === true);
 }
+
+export interface CatalogFilters {
+  query?: string;
+  category?: string;
+  level?: string;
+  language?: Language;
+}
+
+/** Filtre et recherche dans une liste de cours du catalogue public (m4). */
+export function filterCourses(courses: readonly Course[], filters: CatalogFilters): Course[] {
+  const query = filters.query?.trim().toLowerCase();
+  return courses.filter((c) => {
+    if (filters.category && c.category !== filters.category) return false;
+    if (filters.level && c.level !== filters.level) return false;
+    if (filters.language && c.language !== filters.language) return false;
+    if (query) {
+      const haystack = `${c.title} ${c.description ?? ''} ${c.category ?? ''}`.toLowerCase();
+      if (!haystack.includes(query)) return false;
+    }
+    return true;
+  });
+}
+
+export interface PublicSyllabusModule {
+  module: Module;
+  lessons: Lesson[];
+}
+
+/** Plan de cours public (anonyme) : modules visibles et leurs leçons visibles. */
+export function visibleSyllabus(catalog: Catalog, courseId: string): PublicSyllabusModule[] {
+  return catalog.modules
+    .filter((m) => m.courseId === courseId && m.visibility === 'visible')
+    .sort(byPosition)
+    .map((m) => ({
+      module: m,
+      lessons: catalog.lessons
+        .filter((l) => l.moduleId === m.id && l.visibility === 'visible')
+        .sort(byPosition),
+    }));
+}

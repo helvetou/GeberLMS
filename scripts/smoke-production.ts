@@ -29,10 +29,13 @@ const CHECKS: Check[] = [
 
 async function main(): Promise<void> {
   let failures = 0;
+  const latencies: number[] = [];
 
   for (const check of CHECKS) {
     try {
+      const started = Date.now();
       const res = await fetch(`${PROD_URL}${check.path}`, { redirect: 'manual' });
+      latencies.push(Date.now() - started);
       const ok = check.statuses.includes(res.status);
       const loc = res.headers.get('location') ?? '';
       const locOk = check.locationContains ? loc.includes(check.locationContains) : true;
@@ -50,6 +53,12 @@ async function main(): Promise<void> {
       failures += 1;
       console.error(`❌ ${check.name} — erreur réseau : ${err instanceof Error ? err.message : String(err)}`);
     }
+  }
+
+  if (latencies.length > 0) {
+    const max = Math.max(...latencies);
+    const avg = Math.round(latencies.reduce((a, b) => a + b, 0) / latencies.length);
+    console.log(`Latence : max ${max} ms, moyenne ${avg} ms (seuil p95 < 1500 ms)`);
   }
 
   console.log(

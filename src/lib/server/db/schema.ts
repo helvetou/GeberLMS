@@ -9,6 +9,8 @@ export const users = sqliteTable('users', {
   locale: text('locale').notNull().default('fr'),
   passwordHash: text('password_hash'),
   status: text('status').notNull().default('active'),
+  consentAt: text('consent_at'),
+  consentMarketing: integer('consent_marketing', { mode: 'boolean' }).notNull().default(false),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),
 });
@@ -176,6 +178,13 @@ export const uploads = sqliteTable('uploads', {
   r2Key: text('r2_key').notNull(),
   filename: text('filename'),
   contentType: text('content_type'),
+  createdAt: text('created_at').notNull(),
+});
+
+export const llmUsage = sqliteTable('llm_usage', {
+  id: text('id').primaryKey(),
+  model: text('model').notNull(),
+  promptTokens: integer('prompt_tokens').notNull().default(0),
   createdAt: text('created_at').notNull(),
 });
 

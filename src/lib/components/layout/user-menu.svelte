@@ -41,6 +41,9 @@ import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 			<span class="block truncate text-xs text-muted-foreground">{user.email}</span>
 		</DropdownMenu.Label>
 		<DropdownMenu.Separator />
+		<DropdownMenu.Item onSelect={() => goto('/account')}>
+			{t('account.title')}
+		</DropdownMenu.Item>
 		<DropdownMenu.Item variant="destructive" onSelect={() => goto('/logout')}>
 			{t('nav.logout')}
 		</DropdownMenu.Item>

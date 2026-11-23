@@ -12,6 +12,7 @@ import {
   type QuizLlm,
 } from '$lib/server/quiz';
 import { mockQuizQuestions } from '$lib/domain/quiz';
+import { recordLlmUsage, getLlmBudgetState } from '$lib/server/llm-budget';
 
 export const load: PageServerLoad = async ({ locals, platform }) => {
   if (locals.user?.role !== 'admin') {
@@ -19,9 +20,9 @@ export const load: PageServerLoad = async ({ locals, platform }) => {
   }
   const db = platform?.env?.DB ? createDb(platform.env.DB) : null;
   if (!db) {
-    return { lessons: [], error: ErrorCodes.DB_UNAVAILABLE };
+    return { lessons: [], budget: null, error: ErrorCodes.DB_UNAVAILABLE };
   }
-  return { lessons: await listQuizLessons(db) };
+  return { lessons: await listQuizLessons(db), budget: await getLlmBudgetState(db) };
 };
 
 export const actions: Actions = {
@@ -124,6 +125,10 @@ export const actions: Actions = {
         topic,
         count,
       });
+      if (aiBinding) {
+        const promptTokens = Math.max(1, Math.round((topic.length + 200) / 4));
+        await recordLlmUsage(createDb(dbBinding), '@cf/meta/llama-3.1-8b-instruct', promptTokens);
+      }
       return { ok: true, created };
     } catch (err) {
       if (err instanceof QuizServiceError) return fail(400, { error: err.code });

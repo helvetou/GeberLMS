@@ -11,6 +11,15 @@
 
 <h1>{t('quizzes.title')}</h1>
 
+{#if data.budget}
+  <p class="text-sm text-muted-foreground">
+    {t('quizzes.budget')} : {data.budget.spendEuros} € / {data.budget.budgetEuros} € —
+    <span class={data.budget.status === 'critical' ? 'text-red-500' : data.budget.status === 'warning' ? 'text-amber-500' : ''}>
+      {data.budget.status}
+    </span>
+  </p>
+{/if}
+
 {#if data.error}
   <p role="alert">{tError(data.error)}</p>
 {/if}

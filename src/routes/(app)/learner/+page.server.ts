@@ -6,8 +6,9 @@ import { getLearnerDashboardView } from '$lib/server/dashboard';
 import { recordLessonProgress, ProgressServiceError } from '$lib/server/progress';
 import { listQuizQuestions, gradeQuizForLesson, QuizServiceError } from '$lib/server/quiz';
 import { listUploads, createUpload, UploadServiceError } from '$lib/server/upload';
-import { logActivity } from '$lib/server/activity';
+import { logActivity, listRecentActivity } from '$lib/server/activity';
 import { ACTIONS as ACTIVITY_ACTIONS } from '$lib/domain/activity';
+import { buildLearnerStats, nextLesson } from '$lib/domain/dashboard';
 import type { AnswerSelection, QuizQuestion } from '$lib/domain/quiz';
 
 export const load: PageServerLoad = async ({ locals, platform }) => {
@@ -37,7 +38,10 @@ export const load: PageServerLoad = async ({ locals, platform }) => {
 
   return {
     view,
+    stats: buildLearnerStats(view),
+    next: nextLesson(view),
     quizzes,
+    activity: await listRecentActivity(db, locals.user.id, 8),
     uploads: await listUploads(db, locals.user.id),
     userName: locals.user.name ?? locals.user.email,
   };

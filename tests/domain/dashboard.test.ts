@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildTutorDashboard, buildLearnerDashboard } from '../../src/lib/domain/dashboard';
+import { buildTutorDashboard, buildLearnerDashboard, buildLearnerStats, nextLesson } from '../../src/lib/domain/dashboard';
 import type { Catalog } from '../../src/lib/domain/catalog';
 import type { Enrollment } from '../../src/lib/domain/enrollment';
 import type { Guardianship } from '../../src/lib/domain/guardianship';
@@ -100,5 +100,91 @@ describe('buildLearnerDashboard (FR-22)', () => {
   it('returns empty courses for a learner with no enrollments', () => {
     const d = buildLearnerDashboard({ learnerId: 'nope', enrollments, catalog, progress });
     expect(d.courses).toEqual([]);
+  });
+});
+
+describe('buildLearnerStats (m6)', () => {
+  const dashboard = {
+    learnerId: 'u',
+    courses: [
+      {
+        enrollmentId: 'e1', courseId: 'c1', title: 'C1', status: 'active' as const,
+        completedLessons: 1, totalLessons: 2,
+        lessons: [
+          { lessonId: 'l1', title: 'L1', type: 'text' as const, status: 'completed' as const, score: 80 },
+          { lessonId: 'l2', title: 'L2', type: 'video' as const, status: 'in_progress' as const },
+        ],
+      },
+      {
+        enrollmentId: 'e2', courseId: 'c2', title: 'C2', status: 'active' as const,
+        completedLessons: 0, totalLessons: 1,
+        lessons: [{ lessonId: 'l3', title: 'L3', type: 'quiz' as const, status: 'not_started' as const }],
+      },
+    ],
+  };
+
+  it('computes totals and average score', () => {
+    const stats = buildLearnerStats(dashboard);
+    expect(stats.totalCourses).toBe(2);
+    expect(stats.completedLessons).toBe(1);
+    expect(stats.inProgressLessons).toBe(1);
+    expect(stats.averageScore).toBe(80);
+  });
+
+  it('returns average 0 when no scores', () => {
+    const stats = buildLearnerStats({ learnerId: 'u', courses: [] });
+    expect(stats.averageScore).toBe(0);
+  });
+});
+
+describe('nextLesson (m6)', () => {
+  it('prefers the in-progress lesson', () => {
+    const dashboard = {
+      learnerId: 'u',
+      courses: [
+        {
+          enrollmentId: 'e1', courseId: 'c1', title: 'C1', status: 'active' as const,
+          completedLessons: 0, totalLessons: 2,
+          lessons: [
+            { lessonId: 'l1', title: 'L1', type: 'text' as const, status: 'completed' as const },
+            { lessonId: 'l2', title: 'L2', type: 'video' as const, status: 'in_progress' as const },
+          ],
+        },
+      ],
+    };
+    expect(nextLesson(dashboard)).toEqual({ courseId: 'c1', courseTitle: 'C1', lessonId: 'l2', lessonTitle: 'L2' });
+  });
+
+  it('falls back to the first not-started lesson', () => {
+    const dashboard = {
+      learnerId: 'u',
+      courses: [
+        {
+          enrollmentId: 'e1', courseId: 'c1', title: 'C1', status: 'active' as const,
+          completedLessons: 1, totalLessons: 1,
+          lessons: [{ lessonId: 'l1', title: 'L1', type: 'text' as const, status: 'completed' as const }],
+        },
+        {
+          enrollmentId: 'e2', courseId: 'c2', title: 'C2', status: 'active' as const,
+          completedLessons: 0, totalLessons: 1,
+          lessons: [{ lessonId: 'l3', title: 'L3', type: 'quiz' as const, status: 'not_started' as const }],
+        },
+      ],
+    };
+    expect(nextLesson(dashboard)?.lessonId).toBe('l3');
+  });
+
+  it('returns null when everything is complete', () => {
+    const dashboard = {
+      learnerId: 'u',
+      courses: [
+        {
+          enrollmentId: 'e1', courseId: 'c1', title: 'C1', status: 'active' as const,
+          completedLessons: 1, totalLessons: 1,
+          lessons: [{ lessonId: 'l1', title: 'L1', type: 'text' as const, status: 'completed' as const }],
+        },
+      ],
+    };
+    expect(nextLesson(dashboard)).toBeNull();
   });
 });

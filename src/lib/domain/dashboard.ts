@@ -119,3 +119,49 @@ export function buildLearnerDashboard(input: {
 
   return { learnerId: input.learnerId, courses };
 }
+
+export interface LearnerStats {
+  totalCourses: number;
+  completedLessons: number;
+  inProgressLessons: number;
+  averageScore: number;
+}
+
+/** Statistiques globales du tableau de bord apprenant (m6). */
+export function buildLearnerStats(dashboard: LearnerDashboard): LearnerStats {
+  const allLessons = dashboard.courses.flatMap((c) => c.lessons);
+  const scored = allLessons.filter((l) => l.score !== undefined && l.score !== null);
+  return {
+    totalCourses: dashboard.courses.length,
+    completedLessons: allLessons.filter((l) => l.status === 'completed').length,
+    inProgressLessons: allLessons.filter((l) => l.status === 'in_progress').length,
+    averageScore: scored.length
+      ? Math.round(scored.reduce((sum, l) => sum + (l.score ?? 0), 0) / scored.length)
+      : 0,
+  };
+}
+
+export interface NextLesson {
+  courseId: string;
+  courseTitle: string;
+  lessonId: string;
+  lessonTitle: string;
+}
+
+/** Prochaine leçon à reprendre : en cours, sinon première non commencée. */
+export function nextLesson(dashboard: LearnerDashboard): NextLesson | null {
+  for (const course of dashboard.courses) {
+    const next =
+      course.lessons.find((l) => l.status === 'in_progress') ??
+      course.lessons.find((l) => l.status === 'not_started');
+    if (next) {
+      return {
+        courseId: course.courseId,
+        courseTitle: course.title,
+        lessonId: next.lessonId,
+        lessonTitle: next.title,
+      };
+    }
+  }
+  return null;
+}

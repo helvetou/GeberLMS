@@ -1,6 +1,8 @@
 <script lang="ts">
   import { useI18n } from '$lib/i18n.svelte';
   const { t, tStatus, tError } = useI18n();
+  import * as Card from '$lib/components/ui/card/index.js';
+  import { Badge } from '$lib/components/ui/badge/index.js';
   import type { PageProps } from './$types';
   let { data, form }: PageProps = $props();
 
@@ -11,6 +13,10 @@
         )
       : [],
   );
+
+  function pct(done: number, total: number): number {
+    return total > 0 ? Math.round((done / total) * 100) : 0;
+  }
 </script>
 
 <svelte:head>
@@ -20,74 +26,121 @@
 <h1>{t('learner.title')}</h1>
 
 {#if data.view}
-  {#if data.view.courses.length === 0}
-    <p>{t('learner.noCourses')}</p>
-  {:else}
-    <ul>
-      {#each data.view.courses as c (c.courseId)}
-        <li>
-          <strong>{c.title}</strong>
-          — {c.completedLessons}/{c.totalLessons} {t('common.lessons')} ({tStatus(c.status)})
-          <a href={`/learner/courses/${c.courseId}`} class="ml-2 text-primary underline">
-            {t('reader.open')}
-          </a>
-          <ul>
-            {#each c.lessons as l (l.lessonId)}
-              <li>
-                {l.title} — {tStatus(l.status)}
-                {#if l.type === 'quiz'}
-                  {#if (data.quizzes[l.lessonId] ?? []).length > 0}
-                    <form method="POST" action="?/submitQuiz">
-                      <input type="hidden" name="enrollmentId" value={c.enrollmentId} />
-                      <input type="hidden" name="lessonId" value={l.lessonId} />
-                      {#each data.quizzes[l.lessonId] as q (q.id)}
-                        <p>{q.prompt}</p>
-                        {#each q.choices as choice, i (i)}
-                          <label>
-                            <input type="radio" name={`q_${q.id}`} value={i} />
-                            {choice}
-                          </label>
-                        {/each}
-                      {/each}
-                      <button type="submit">{t('learner.submitQuiz')}</button>
-                    </form>
-                  {:else}
-                    <em>{t('learner.emptyQuiz')}</em>
-                  {/if}
-                {:else if l.status !== 'completed'}
-                  <form method="POST" action="?/complete" style="display: inline">
-                    <input type="hidden" name="enrollmentId" value={c.enrollmentId} />
-                    <input type="hidden" name="lessonId" value={l.lessonId} />
-                    <button type="submit">{t('learner.markDone')}</button>
-                  </form>
-                {/if}
-              </li>
-            {/each}
-          </ul>
-        </li>
-      {/each}
-    </ul>
+  {@const stats = data.stats}
+  <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <Card.Root>
+      <Card.Content class="py-4">
+        <p class="text-sm text-muted-foreground">{t('learner.title')}</p>
+        <p class="text-2xl font-semibold">{stats.totalCourses}</p>
+      </Card.Content>
+    </Card.Root>
+    <Card.Root>
+      <Card.Content class="py-4">
+        <p class="text-sm text-muted-foreground">{t('dashboard.completed')}</p>
+        <p class="text-2xl font-semibold">{stats.completedLessons}</p>
+      </Card.Content>
+    </Card.Root>
+    <Card.Root>
+      <Card.Content class="py-4">
+        <p class="text-sm text-muted-foreground">{t('dashboard.inProgress')}</p>
+        <p class="text-2xl font-semibold">{stats.inProgressLessons}</p>
+      </Card.Content>
+    </Card.Root>
+    <Card.Root>
+      <Card.Content class="py-4">
+        <p class="text-sm text-muted-foreground">{t('dashboard.avgScore')}</p>
+        <p class="text-2xl font-semibold">{stats.averageScore} %</p>
+      </Card.Content>
+    </Card.Root>
+  </div>
+
+  {#if data.next}
+    <Card.Root class="mt-4">
+      <Card.Content class="flex items-center justify-between gap-4 py-4">
+        <div>
+          <p class="text-sm text-muted-foreground">{data.next.courseTitle}</p>
+          <p class="font-medium">{data.next.lessonTitle}</p>
+        </div>
+        <a
+          href={`/learner/courses/${data.next.courseId}`}
+          class="rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground"
+        >
+          {t('dashboard.continue')}
+        </a>
+      </Card.Content>
+    </Card.Root>
   {/if}
 
-  <h2>{t('learner.myDocs')}</h2>
-  <form method="POST" action="?/upload" enctype="multipart/form-data">
-    <label>{t('learner.file')} <input type="file" name="file" required /></label>
-    <label>
-      {t('learner.lessonOptional')}
-      <select name="lessonId">
+  <div class="mt-6 grid gap-6 lg:grid-cols-[1fr_320px]">
+    <section>
+      <h2 class="text-lg font-semibold">{t('learner.title')}</h2>
+      {#if data.view.courses.length === 0}
+        <p class="mt-2 text-muted-foreground">{t('learner.noCourses')}</p>
+      {:else}
+        <ul class="mt-3 space-y-3">
+          {#each data.view.courses as c (c.courseId)}
+            <li class="rounded-lg border bg-background p-4">
+              <div class="flex items-center justify-between gap-2">
+                <a href={`/learner/courses/${c.courseId}`} class="font-medium hover:underline">
+                  {c.title}
+                </a>
+                <Badge variant="outline">{tStatus(c.status)}</Badge>
+              </div>
+              <div class="mt-2 h-2 w-full overflow-hidden rounded-full bg-muted">
+                <div
+                  class="h-full rounded-full bg-primary"
+                  style={`width: ${pct(c.completedLessons, c.totalLessons)}%`}
+                ></div>
+              </div>
+              <p class="mt-1 text-xs text-muted-foreground">
+                {c.completedLessons}/{c.totalLessons} {t('common.lessons')}
+                ({pct(c.completedLessons, c.totalLessons)} %)
+              </p>
+            </li>
+          {/each}
+        </ul>
+      {/if}
+    </section>
+
+    <section>
+      <h2 class="text-lg font-semibold">{t('dashboard.activity')}</h2>
+      {#if (data.activity ?? []).length === 0}
+        <p class="mt-2 text-muted-foreground">{t('dashboard.noActivity')}</p>
+      {:else}
+        <ul class="mt-3 space-y-2 text-sm">
+          {#each data.activity as a (a.id)}
+            <li class="rounded-md border bg-background px-3 py-2">
+              <span class="font-mono text-xs text-muted-foreground">{a.action}</span>
+              <span class="block text-xs text-muted-foreground">{a.createdAt}</span>
+            </li>
+          {/each}
+        </ul>
+      {/if}
+    </section>
+  </div>
+
+  <h2 class="mt-6 text-lg font-semibold">{t('learner.myDocs')}</h2>
+  <form method="POST" action="?/upload" enctype="multipart/form-data" class="mt-2 flex flex-wrap gap-3">
+    <label class="flex items-center gap-2">
+      <span>{t('learner.file')}</span>
+      <input type="file" name="file" required class="text-sm" />
+    </label>
+    <label class="flex items-center gap-2">
+      <span>{t('learner.lessonOptional')}</span>
+      <select name="lessonId" class="h-9 rounded-md border border-input bg-transparent px-2 text-sm">
         <option value="">{t('learner.none')}</option>
         {#each lessons as l (l.lessonId)}
           <option value={l.lessonId}>{l.courseTitle} — {l.title}</option>
         {/each}
       </select>
     </label>
-    <button type="submit">{t('learner.upload')}</button>
+    <button type="submit" class="rounded-md border px-3 py-1.5 text-sm">{t('learner.upload')}</button>
   </form>
 
   {#if (data.uploads ?? []).length === 0}
-    <p><em>{t('learner.noDocs')}</em></p>
+    <p class="mt-2 text-sm text-muted-foreground">{t('learner.noDocs')}</p>
   {:else}
-    <ul>
+    <ul class="mt-2 text-sm">
       {#each data.uploads as u (u.id)}
         <li>{u.filename ?? u.r2Key} — {u.createdAt}</li>
       {/each}
@@ -100,17 +153,6 @@
 {#if form?.error}
   <p role="alert">{tError(form.error)}</p>
 {/if}
-
-{#if form?.ok && form.quizResult}
-  <p role="status">
-    {t('learner.quizResult', {
-      correct: form.quizResult.correct,
-      total: form.quizResult.total,
-      percentage: form.quizResult.percentage,
-    })}
-  </p>
-{:else if form?.ok && form.uploaded}
+{#if form?.ok && form.uploaded}
   <p role="status">{t('learner.uploaded')}</p>
-{:else if form?.ok}
-  <p role="status">{t('learner.progressSaved')}</p>
 {/if}

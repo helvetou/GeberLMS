@@ -1,3 +1,4 @@
+import { desc, eq } from 'drizzle-orm';
 import type { DB } from './db';
 import { activityLogs } from './db/schema';
 import { createActivityEntry } from '$lib/domain/activity';
@@ -33,4 +34,15 @@ export async function logActivity(db: DB, input: LogActivityInput): Promise<void
       createdAt: entry.createdAt,
     })
     .run();
+}
+
+/** Dernières entrées du journal d'un acteur (fil d'activité, m6). */
+export async function listRecentActivity(db: DB, actorId: string, limit = 10) {
+  return db
+    .select()
+    .from(activityLogs)
+    .where(eq(activityLogs.actorId, actorId))
+    .orderBy(desc(activityLogs.createdAt))
+    .limit(limit)
+    .all();
 }

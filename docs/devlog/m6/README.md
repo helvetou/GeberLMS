@@ -1,16 +1,26 @@
-# Devlog — Milestone m6 (v0.6.0)
+# Milestone m6 — v0.6.0 — Refonte des tableaux de bord
 
-Development journal of milestone **m6** — GeberLMS v0.6.0.
+**Version** : `0.6.0` · **Statut** : ✅ livré (local)
 
-## Metadata
+## Objectif
+Refondre les tableaux de bord apprenant et tuteur avec shadcn, alimentés par les
+données réelles de progression du lecteur.
 
-- **Milestone**: m6
-- **Version**: 0.6.0
-- **Tag**: v0.6.0 (to set at delivery)
-- **Scope**: Dashboards redesign — learner + tutor (fed by real progress)
+## Livrés
 
-## Content
+1. **Domaine** — `buildLearnerStats` (cours, leçons terminées/en cours, score moyen)
+   et `nextLesson` (prochaine leçon à reprendre). 5 tests.
+2. **Serveur** — `listRecentActivity` (fil d'activité d'un acteur).
+3. **Tableau de bord apprenant** — stat-cards, carte « reprendre », liste de cours
+   avec barres de progression, fil d'activité récent, dépôt de documents.
+4. **Tableau de bord tuteur** — stat-cards (apprenants, cours, progression) et
+   cartes par apprenant avec barres de progression détaillées.
 
-- [`test-log.md`](test-log.md) — test experience.
-- [`feedback.md`](feedback.md) — feedback.
-- [`howto/`](howto/) — small tutorials.
+## Vérifications
+- `npm test` : **247 tests verts** (25 fichiers).
+- `npm run typecheck` : OK · `npm run check` : 0 erreur / 0 warning · `npm run build` : OK.
+
+## Écart spec↔impl réduit
+- **FR-21 / FR-22** : tableaux de bord tuteur/apprenant alimentés par la progression réelle.
+
+Voir `audit.md`.

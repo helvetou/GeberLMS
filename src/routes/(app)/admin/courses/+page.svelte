@@ -43,6 +43,15 @@
   <label>{t('courses.price')} <input type="number" name="priceCents" value="0" min="0" required /></label>
   <label>{t('courses.category')} <input type="text" name="category" /></label>
   <label>{t('courses.level')} <input type="text" name="level" /></label>
+  <label>
+    {t('courses.tutor')}
+    <select name="tutorId">
+      <option value="">{t('learner.none')}</option>
+      {#each data.tutors as tutor (tutor.id)}
+        <option value={tutor.id}>{tutor.name ?? tutor.email}</option>
+      {/each}
+    </select>
+  </label>
   <label>{t('courses.description')} <textarea name="description" rows="2"></textarea></label>
   <label><input type="checkbox" name="isPublic" /> {t('courses.public')}</label>
   <button type="submit">{t('common.create')}</button>

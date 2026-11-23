@@ -4,6 +4,7 @@ import type { Actions, PageServerLoad } from './$types';
 import { createDb } from '$lib/server/db';
 import {
   listEnrollmentsForAdmin,
+  listInvoicesForAdmin,
   confirmEnrollmentPayment,
   PaymentServiceError,
 } from '$lib/server/payment';
@@ -14,9 +15,12 @@ export const load: PageServerLoad = async ({ locals, platform }) => {
   }
   const db = platform?.env?.DB ? createDb(platform.env.DB) : null;
   if (!db) {
-    return { enrollments: [], error: ErrorCodes.DB_UNAVAILABLE };
+    return { enrollments: [], invoices: [], error: ErrorCodes.DB_UNAVAILABLE };
   }
-  return { enrollments: await listEnrollmentsForAdmin(db) };
+  return {
+    enrollments: await listEnrollmentsForAdmin(db),
+    invoices: await listInvoicesForAdmin(db),
+  };
 };
 
 export const actions: Actions = {

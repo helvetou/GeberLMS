@@ -36,6 +36,15 @@ export async function getUserByEmail(db: DB, email: string): Promise<UserRow | u
   return db.select().from(users).where(eq(users.email, email)).get();
 }
 
+/** Tuteurs existants (pour l'attribution d'un cours, m7). */
+export async function listTutors(db: DB) {
+  return db
+    .select({ id: users.id, email: users.email, name: users.name })
+    .from(users)
+    .where(eq(users.role, 'tutor'))
+    .all();
+}
+
 export async function verifyLogin(
   db: DB,
   email: string,

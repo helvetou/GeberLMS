@@ -66,6 +66,20 @@
               <input type="hidden" name="id" value={q.id} />
               <button type="submit">{t('common.delete')}</button>
             </form>
+            <details class="mt-1">
+              <summary class="cursor-pointer text-sm text-muted-foreground">{t('quizzes.edit')}</summary>
+              <form method="POST" action="?/updateQuestion" class="mt-2 space-y-1">
+                <input type="hidden" name="id" value={q.id} />
+                <label>{t('quizzes.prompt')} <input type="text" name="prompt" value={q.prompt} required /></label>
+                <label>
+                  {t('quizzes.choices')}
+                  <textarea name="choices" rows="3" required>{q.choices.join('\n')}</textarea>
+                </label>
+                <label>{t('quizzes.correctIndex')} <input type="number" name="correctIndex" min="0" value={q.correctIndex} required /></label>
+                <label>{t('quizzes.points')} <input type="number" name="points" min="1" value={q.points ?? 1} /></label>
+                <button type="submit">{t('quizzes.edit')}</button>
+              </form>
+            </details>
           </li>
         {/each}
       </ol>

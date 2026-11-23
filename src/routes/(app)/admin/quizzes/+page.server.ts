@@ -6,6 +6,7 @@ import {
   listQuizLessons,
   createQuizQuestion,
   deleteQuizQuestion,
+  updateQuizQuestion,
   generateQuizQuestions,
   QuizServiceError,
   type QuizLlm,
@@ -57,6 +58,31 @@ export const actions: Actions = {
     const data = await request.formData();
     try {
       await deleteQuizQuestion(db, String(data.get('id') ?? ''));
+    } catch (err) {
+      if (err instanceof QuizServiceError) return fail(400, { error: err.code });
+      throw err;
+    }
+    throw redirect(303, '/admin/quizzes');
+  },
+
+  updateQuestion: async ({ request, locals, platform }) => {
+    if (locals.user?.role !== 'admin') return fail(403, { error: ErrorCodes.ACCESS_DENIED });
+    const db = platform?.env?.DB ? createDb(platform.env.DB) : null;
+    if (!db) return fail(503, { error: ErrorCodes.DB_UNAVAILABLE });
+
+    const data = await request.formData();
+    const id = String(data.get('id') ?? '');
+    const prompt = String(data.get('prompt') ?? '');
+    const choices = String(data.get('choices') ?? '')
+      .split('\n')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const correctIndex = Number(data.get('correctIndex') ?? NaN);
+    const pointsRaw = String(data.get('points') ?? '');
+    const points = pointsRaw ? Number(pointsRaw) : undefined;
+
+    try {
+      await updateQuizQuestion(db, id, { prompt, choices, correctIndex, points });
     } catch (err) {
       if (err instanceof QuizServiceError) return fail(400, { error: err.code });
       throw err;

@@ -101,3 +101,12 @@ export async function createCoupon(db: DB, input: CreateCouponInput): Promise<st
   });
   return id;
 }
+
+/** Active/désactive un coupon (audit §7.2, FR-44). */
+export async function setCouponEnabled(db: DB, id: string, enabled: boolean): Promise<void> {
+  const row = await db.select({ id: coupons.id }).from(coupons).where(eq(coupons.id, id)).get();
+  if (!row) {
+    throw new CouponServiceError(ErrorCodes.COUPON_NOT_FOUND, 'Coupon introuvable');
+  }
+  await db.update(coupons).set({ enabled }).where(eq(coupons.id, id)).run();
+}

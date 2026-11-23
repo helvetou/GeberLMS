@@ -108,6 +108,46 @@ export async function deleteQuizQuestion(db: DB, id: string): Promise<void> {
   await db.delete(quizQuestions).where(eq(quizQuestions.id, id)).run();
 }
 
+/** Modère une question (corrige l'énoncé/choix/réponse) — m7. */
+export async function updateQuizQuestion(
+  db: DB,
+  id: string,
+  input: { prompt: string; choices: string[]; correctIndex: number; points?: number },
+): Promise<void> {
+  const row = await db.select().from(quizQuestions).where(eq(quizQuestions.id, id)).get();
+  if (!row) {
+    throw new QuizServiceError(ErrorCodes.QUESTION_INVALID, 'Question introuvable');
+  }
+
+  const question: QuizQuestion = {
+    id,
+    lessonId: row.lessonId,
+    prompt: input.prompt,
+    choices: input.choices,
+    correctIndex: input.correctIndex,
+    points: input.points ?? 1,
+  };
+  try {
+    validateQuizQuestion(question);
+  } catch (err) {
+    if (err instanceof QuizError) {
+      throw new QuizServiceError(err.code, err.message);
+    }
+    throw err;
+  }
+
+  await db
+    .update(quizQuestions)
+    .set({
+      prompt: question.prompt,
+      choices: JSON.stringify(question.choices),
+      correctIndex: question.correctIndex,
+      points: question.points ?? 1,
+    })
+    .where(eq(quizQuestions.id, id))
+    .run();
+}
+
 export interface QuizLessonView {
   lessonId: string;
   title: string;

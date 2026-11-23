@@ -56,6 +56,11 @@
           <span> — {c.usedCount} {t('coupons.uses')}</span>
         {/if}
         {#if c.expiresAt}<span> — {t('coupons.expires', { date: c.expiresAt })}</span>{/if}
+        <form method="POST" action="?/toggle" style="display: inline">
+          <input type="hidden" name="id" value={c.id} />
+          <input type="hidden" name="enabled" value={!c.enabled} />
+          <button type="submit">{c.enabled ? t('coupons.disable') : t('coupons.enable')}</button>
+        </form>
       </li>
     {/each}
   </ul>

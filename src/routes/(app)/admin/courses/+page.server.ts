@@ -24,6 +24,7 @@ import {
 } from '$lib/server/catalog';
 import { importCourse } from '$lib/server/import';
 import { ImportError } from '$lib/domain/import';
+import { listTutors } from '$lib/server/auth';
 
 function getDb(platform: App.Platform | undefined): DB | null {
   return platform?.env?.DB ? createDb(platform.env.DB) : null;
@@ -35,9 +36,9 @@ export const load: PageServerLoad = async ({ locals, platform }) => {
   }
   const db = getDb(platform);
   if (!db) {
-    return { catalog: [], error: ErrorCodes.DB_UNAVAILABLE };
+    return { catalog: [], tutors: [], error: ErrorCodes.DB_UNAVAILABLE };
   }
-  return { catalog: await listAdminCatalog(db) };
+  return { catalog: await listAdminCatalog(db), tutors: await listTutors(db) };
 };
 
 async function run(
@@ -71,6 +72,7 @@ export const actions: Actions = {
         category: String(data.get('category') ?? '') || undefined,
         level: String(data.get('level') ?? '') || undefined,
         isPublic: data.get('isPublic') === 'on',
+        tutorId: String(data.get('tutorId') ?? '') || undefined,
       }),
     );
     if ('error' in res) return fail(400, res);

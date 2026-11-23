@@ -63,6 +63,54 @@ export async function listEnrollmentsForAdmin(db: DB): Promise<EnrollmentAdminVi
   }));
 }
 
+export interface InvoiceAdminView {
+  id: string;
+  number: string;
+  learnerEmail: string;
+  courseTitle: string;
+  netCents: number;
+  vatRatePercent: number;
+  vatCents: number;
+  totalCents: number;
+  createdAt: string;
+}
+
+/** Factures TVA pour validation comptable (m7, FR-47). */
+export async function listInvoicesForAdmin(db: DB): Promise<InvoiceAdminView[]> {
+  const rows = await db.select().from(invoices).all();
+  const enrollmentIds = rows.map((i) => i.enrollmentId);
+  const enrollmentRows = enrollmentIds.length
+    ? await db.select().from(enrollments).where(inArray(enrollments.id, enrollmentIds)).all()
+    : [];
+  const learnerIds = enrollmentRows.map((e) => e.learnerId);
+  const courseIds = enrollmentRows.map((e) => e.courseId);
+  const learners = learnerIds.length
+    ? await db.select({ id: users.id, email: users.email }).from(users).where(inArray(users.id, learnerIds)).all()
+    : [];
+  const courseRows = courseIds.length
+    ? await db.select({ id: courses.id, title: courses.title }).from(courses).where(inArray(courses.id, courseIds)).all()
+    : [];
+
+  const enrollmentById = new Map(enrollmentRows.map((e) => [e.id, e]));
+  const learnerById = new Map(learners.map((l) => [l.id, l]));
+  const courseById = new Map(courseRows.map((c) => [c.id, c]));
+
+  return rows.map((i) => {
+    const enrollment = enrollmentById.get(i.enrollmentId);
+    return {
+      id: i.id,
+      number: i.number,
+      learnerEmail: enrollment ? learnerById.get(enrollment.learnerId)?.email ?? enrollment.learnerId : '—',
+      courseTitle: enrollment ? courseById.get(enrollment.courseId)?.title ?? enrollment.courseId : '—',
+      netCents: i.netCents,
+      vatRatePercent: i.vatRatePercent,
+      vatCents: i.vatCents,
+      totalCents: i.totalCents,
+      createdAt: i.createdAt,
+    };
+  });
+}
+
 /**
  * Confirme le paiement Payoneer d'une inscription : enregistre le paiement,
  * active l'inscription et génère la facture TVA (FR-40/41/47).

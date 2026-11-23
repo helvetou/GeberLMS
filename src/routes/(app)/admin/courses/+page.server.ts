@@ -22,6 +22,8 @@ import {
   deleteResource,
   CatalogServiceError,
 } from '$lib/server/catalog';
+import { importCourse } from '$lib/server/import';
+import { ImportError } from '$lib/domain/import';
 
 function getDb(platform: App.Platform | undefined): DB | null {
   return platform?.env?.DB ? createDb(platform.env.DB) : null;
@@ -65,10 +67,40 @@ export const actions: Actions = {
         slug: String(data.get('slug') ?? ''),
         language: String(data.get('language') ?? ''),
         priceCents: String(data.get('priceCents') ?? '0'),
+        description: String(data.get('description') ?? '') || undefined,
+        category: String(data.get('category') ?? '') || undefined,
+        level: String(data.get('level') ?? '') || undefined,
+        isPublic: data.get('isPublic') === 'on',
       }),
     );
     if ('error' in res) return fail(400, res);
     throw redirect(303, '/admin/courses');
+  },
+
+  importCourse: async ({ request, locals, platform }) => {
+    if (locals.user?.role !== 'admin') return fail(403, { error: ErrorCodes.ACCESS_DENIED });
+    const data = await request.formData();
+    const jsonText = String(data.get('json') ?? '').trim();
+    const mode = String(data.get('mode') ?? 'strict') === 'upsert' ? 'upsert' : 'strict';
+    if (!jsonText) return fail(400, { error: ErrorCodes.PARAMS_REQUIRED });
+
+    let raw: unknown;
+    try {
+      raw = JSON.parse(jsonText);
+    } catch {
+      return fail(400, { error: ErrorCodes.IMPORT_INVALID });
+    }
+
+    const db = getDb(platform);
+    if (!db) return fail(503, { error: ErrorCodes.DB_UNAVAILABLE });
+
+    try {
+      const result = await importCourse(db, raw, mode);
+      return { ok: true, slug: result.slug, modules: result.modules, lessons: result.lessons };
+    } catch (err) {
+      if (err instanceof ImportError) return fail(400, { error: err.code });
+      throw err;
+    }
   },
 
   renameCourse: async ({ request, locals, platform }) => {

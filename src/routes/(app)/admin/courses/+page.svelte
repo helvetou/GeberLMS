@@ -41,8 +41,34 @@
     </select>
   </label>
   <label>{t('courses.price')} <input type="number" name="priceCents" value="0" min="0" required /></label>
+  <label>{t('courses.category')} <input type="text" name="category" /></label>
+  <label>{t('courses.level')} <input type="text" name="level" /></label>
+  <label>{t('courses.description')} <textarea name="description" rows="2"></textarea></label>
+  <label><input type="checkbox" name="isPublic" /> {t('courses.public')}</label>
   <button type="submit">{t('common.create')}</button>
 </form>
+
+<hr />
+
+<h2>{t('courses.import')}</h2>
+<form method="POST" action="?/importCourse">
+  <label>
+    {t('courses.importMode')}
+    <select name="mode">
+      <option value="strict">{t('courses.importStrict')}</option>
+      <option value="upsert">{t('courses.importUpsert')}</option>
+    </select>
+  </label>
+  <label>
+    {t('courses.importJson')}
+    <textarea name="json" rows="8" required placeholder="Collez le JSON du cours (title, slug, language, price_cents, modules…)"></textarea>
+  </label>
+  <button type="submit">{t('courses.importSubmit')}</button>
+</form>
+
+{#if form?.ok && form.slug}
+  <p role="status">{t('courses.imported', { slug: form.slug, modules: form.modules, lessons: form.lessons })}</p>
+{/if}
 
 <hr />
 

@@ -27,6 +27,7 @@ export interface Module {
   title: string;
   visibility: Visibility;
   position?: number;
+  contentKey?: string | null;
 }
 
 export interface Lesson {
@@ -36,6 +37,9 @@ export interface Lesson {
   type: ContentType;
   visibility: Visibility;
   position?: number;
+  contentKey?: string | null;
+  contentRef?: string | null;
+  passingScore?: number | null;
 }
 
 export interface Resource {
@@ -43,6 +47,8 @@ export interface Resource {
   lessonId: string;
   title: string;
   visibility: Visibility;
+  contentKey?: string | null;
+  r2Key?: string | null;
 }
 
 export interface Catalog {

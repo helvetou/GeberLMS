@@ -77,6 +77,13 @@ export const ErrorCodes = {
   UPLOAD_FILENAME_REQUIRED: 'errors.upload_filename_required',
   UPLOAD_SIZE_INVALID: 'errors.upload_size_invalid',
   UPLOAD_TOO_LARGE: 'errors.upload_too_large',
+
+  // Import JSON de cours (FR-48)
+  IMPORT_INVALID: 'errors.import_invalid',
+  IMPORT_SLUG_FORMAT: 'errors.import_slug_format',
+  IMPORT_LESSON_CONTENT: 'errors.import_lesson_content',
+  IMPORT_QUIZ_INVALID: 'errors.import_quiz_invalid',
+  IMPORT_DUPLICATE_KEY: 'errors.import_duplicate_key',
 } as const;
 
 export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];

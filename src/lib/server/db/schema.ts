@@ -58,6 +58,7 @@ export const modules = sqliteTable('modules', {
   courseId: text('course_id')
     .notNull()
     .references(() => courses.id, { onDelete: 'cascade' }),
+  contentKey: text('content_key'),
   position: integer('position').notNull().default(0),
   title: text('title').notNull(),
   visibility: text('visibility', { enum: ['visible', 'hidden'] }).notNull().default('visible'),
@@ -69,11 +70,13 @@ export const lessons = sqliteTable('lessons', {
   moduleId: text('module_id')
     .notNull()
     .references(() => modules.id, { onDelete: 'cascade' }),
+  contentKey: text('content_key'),
   position: integer('position').notNull().default(0),
   title: text('title').notNull(),
   type: text('type', { enum: ['video', 'text', 'quiz'] }).notNull(),
   visibility: text('visibility', { enum: ['visible', 'hidden'] }).notNull().default('visible'),
   contentRef: text('content_ref'),
+  passingScore: integer('passing_score'),
   createdAt: text('created_at').notNull(),
 });
 
@@ -82,6 +85,7 @@ export const resources = sqliteTable('resources', {
   lessonId: text('lesson_id')
     .notNull()
     .references(() => lessons.id, { onDelete: 'cascade' }),
+  contentKey: text('content_key'),
   title: text('title').notNull(),
   r2Key: text('r2_key'),
   visibility: text('visibility', { enum: ['visible', 'hidden'] }).notNull().default('visible'),

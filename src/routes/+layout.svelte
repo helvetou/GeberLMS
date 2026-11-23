@@ -1,4 +1,5 @@
 <script lang="ts">
+  import '../app.css';
   import { initI18n } from '$lib/i18n.svelte';
   import type { LayoutProps } from './$types';
   import { ModeWatcher } from 'mode-watcher';

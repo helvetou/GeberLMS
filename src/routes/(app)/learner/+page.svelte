@@ -28,6 +28,9 @@
         <li>
           <strong>{c.title}</strong>
           — {c.completedLessons}/{c.totalLessons} {t('common.lessons')} ({tStatus(c.status)})
+          <a href={`/learner/courses/${c.courseId}`} class="ml-2 text-primary underline">
+            {t('reader.open')}
+          </a>
           <ul>
             {#each c.lessons as l (l.lessonId)}
               <li>

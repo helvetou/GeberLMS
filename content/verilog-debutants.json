@@ -1,0 +1,69 @@
+{
+  "title": "Verilog pour débutants",
+  "slug": "verilog-debutants",
+  "language": "fr",
+  "description": "Maîtrisez les bases de la conception numérique sur FPGA en Verilog : combinatoire, séquentiel, machines à états et testbench.",
+  "thumbnail_key": "courses/verilog-debutants/thumb.webp",
+  "category": "fpga",
+  "level": "debutant",
+  "is_public": true,
+  "price_cents": 4900,
+  "modules": [
+    {
+      "key": "fondations",
+      "title": "Fondations",
+      "lessons": [
+        {
+          "key": "parallele",
+          "title": "Le matériel est parallèle",
+          "type": "text",
+          "content_markdown": "# Le matériel est parallèle\n\nContrairement à un programme séquentiel, un circuit FPGA décrit du **matériel** :\ntoutes les instructions s'exécutent *en même temps*.\n\n- **Combinatoire** : la sortie ne dépend que des entrées courantes.\n- **Séquentiel** : la sortie dépend d'une horloge et d'un état mémorisé.\n\n## Pourquoi c'est important\n\nComprendre cette différence évite d'écrire du Verilog comme du C.",
+          "resources": [
+            { "key": "glossaire", "title": "Glossaire Verilog (PDF)", "r2_key": "courses/verilog-debutants/glossaire.pdf" }
+          ]
+        },
+        {
+          "key": "simulation",
+          "title": "Simulation avec Icarus Verilog",
+          "type": "video",
+          "video_url": "courses/verilog-debutants/sim-icarus.mp4",
+          "duration_seconds": 420
+        },
+        {
+          "key": "quiz-rappel",
+          "title": "Quiz de rappel",
+          "type": "quiz",
+          "quiz_data": {
+            "passing_score": 80,
+            "questions": [
+              {
+                "question": "Quel bloc procédural décrit la logique séquentielle ?",
+                "options": ["assign", "always @(posedge clk)", "initial", "generate"],
+                "correct_index": 1,
+                "explanation": "always @(posedge clk) décrit un comportement déclenché sur front d'horloge."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "key": "sequentiel",
+      "title": "Logique séquentielle",
+      "lessons": [
+        {
+          "key": "bascule",
+          "title": "Le gabarit de bascule",
+          "type": "text",
+          "content_markdown": "# Le gabarit de bascule\n\n```verilog\nalways @(posedge clk) begin\n  if (rst) q <= 0;\n  else q <= d;\nend\n```\n\n- `<=` : affectation **non bloquante** (recommandée en séquentiel).\n- reset **synchrone** vs **asynchrone** : choisir et s'y tenir."
+        },
+        {
+          "key": "compteur",
+          "title": "Compteur 4 bits",
+          "type": "text",
+          "content_markdown": "# Compteur 4 bits\n\n```verilog\nmodule counter(clk, rst, q);\n  input clk, rst;\n  output reg [3:0] q;\n  always @(posedge clk)\n    if (rst) q <= 0;\n    else q <= q + 1;\nendmodule\n```\n\nUn **compteur** est le premier circuit séquentiel utile : diviseur d'horloge,\nadressage, machines à états."
+        }
+      ]
+    }
+  ]
+}

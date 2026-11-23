@@ -4,25 +4,29 @@
 **GeberLMS** is the Learning Management System of **Helveticore OÜ** (Estonia) for selling online courses (FR / EN / AR / DE). Stack: **SvelteKit + Cloudflare** (D1, R2, Workers AI).
 
 ## Current version
-- **v0.1.0** — milestone **m1** (tag `v0.1.0`)
-- Status: **working prototype**, in production-validation phase
+- **v1.0.0** — milestone **m10** (tag `v1.0.0`)
+- Status: **delivered** (local + production)
+- Production: **https://geberlms.haroudm.workers.dev/**
 
-## What is implemented (m1)
-- Pure, tested business logic (TDD): price/VAT/coupons, roles, tutor↔learner guardianship, enrollments, catalog, progress, quiz, payment, invoicing.
+## What is implemented (m1 → m10)
+- Pure, tested business logic (TDD): price/VAT/coupons, roles, tutor↔learner guardianship, enrollments, catalog, progress, quiz, payment, invoicing, GDPR, LLM budget, anti-copy.
 - Server authentication (sessions) + 3 roles (admin, tutor, learner).
-- Tutor and learner dashboards (progress).
-- Course catalog and content (modules → lessons → resources).
-- Coupons (% / amount) + price/VAT calculation (OSS scheme).
-- Payoneer payment + VAT invoicing (sequential numbering).
-- E-testing (quiz) + LLM quiz generation (Workers AI).
+- Tutor and learner dashboards (progress, activity, stats).
+- Course catalog, content (modules → lessons → resources) and **JSON course import** (FR-48).
+- Public catalog `/catalog` (search/filters) + course reader.
+- Coupons (% / amount) + enable/disable + price/VAT calculation (OSS scheme).
+- Payoneer payment + VAT invoicing (sequential numbering, admin view).
+- E-testing (quiz) + LLM quiz generation (Workers AI) + budget tracking.
 - Learner document uploads (R2).
 - Internationalization + RTL (FR / EN / AR / DE).
-- UI: app shell (sidebar/topbar), shadcn-svelte + Tailwind CSS v4.
+- UI: app shell, shadcn-svelte + Tailwind CSS v4.
+- GDPR (consent, export, erasure).
 
 ## Quality & tests
-- **210 automated tests** (22 files) — all green.
+- **255 automated tests** (26 files) — all green.
+- Domain coverage **98.79 %** (≥ 80 % target).
 - Typecheck, svelte-check (0 errors / 0 warnings) and build: OK.
-- **Integration test** of the manual flow (`test_integration_manuel_dev_m1`).
+- Production smoke test 3/3 (latency max 572 ms) + E2E Playwright 3/3.
 
 ## Deployment
 - Production: **https://geberlms.haroudm.workers.dev/** (Cloudflare Workers).

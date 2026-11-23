@@ -29,11 +29,17 @@ async function main(): Promise<void> {
   const now = new Date().toISOString();
   const passwordHash = await hashPassword(password);
 
+  // Upsert idempotent : relancer ne lève plus d'erreur d'unicité sur email
+  // (audit §7.4) — le mot de passe et le nom sont mis à jour en place.
   const sql = [
     'INSERT INTO users',
     '(id, role, self_payer, email, name, locale, password_hash, status, created_at, updated_at)',
     'VALUES',
-    `('${id}', 'admin', 0, '${escapeSql(email)}', '${escapeSql(name)}', 'fr', '${escapeSql(passwordHash)}', 'active', '${now}', '${now}');`,
+    `('${id}', 'admin', 0, '${escapeSql(email)}', '${escapeSql(name)}', 'fr', '${escapeSql(passwordHash)}', 'active', '${now}', '${now}')`,
+    'ON CONFLICT(email) DO UPDATE SET',
+    'name = excluded.name,',
+    'password_hash = excluded.password_hash,',
+    'updated_at = excluded.updated_at;',
   ].join(' ');
 
   const dir = mkdtempSync(join(tmpdir(), 'geberlms-seed-'));

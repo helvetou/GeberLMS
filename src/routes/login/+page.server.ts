@@ -3,12 +3,13 @@ import { createDb } from '$lib/server/db';
 import { verifyLogin, issueSession } from '$lib/server/auth';
 import { logActivity } from '$lib/server/activity';
 import { ACTIONS as ACTIVITY_ACTIONS } from '$lib/domain/activity';
+import { ErrorCodes } from '$lib/domain/errors';
 
 export const actions: Actions = {
   default: async ({ request, cookies, platform }) => {
     const dbBinding = platform?.env?.DB;
     if (!dbBinding) {
-      return fail(503, { error: 'Base de données indisponible' });
+      return fail(503, { error: ErrorCodes.DB_UNAVAILABLE });
     }
 
     const data = await request.formData();
@@ -16,14 +17,14 @@ export const actions: Actions = {
     const password = String(data.get('password') ?? '');
 
     if (!email || !password) {
-      return fail(400, { error: 'Email et mot de passe requis' });
+      return fail(400, { error: ErrorCodes.EMAIL_PASSWORD_REQUIRED });
     }
 
     const db = createDb(dbBinding);
     const user = await verifyLogin(db, email, password);
     if (!user) {
       await logActivity(db, { action: ACTIVITY_ACTIONS.loginFailed });
-      return fail(400, { error: 'Identifiants invalides' });
+      return fail(400, { error: ErrorCodes.INVALID_CREDENTIALS });
     }
 
     await logActivity(db, { actorId: user.id, action: ACTIVITY_ACTIONS.login });

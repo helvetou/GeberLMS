@@ -1,6 +1,7 @@
 /**
  * Facturation TVA (FR-47). Montants en centimes entiers.
  */
+import { ErrorCodes, type ErrorCode } from './errors';
 export interface Invoice {
   id: string;
   enrollmentId: string;
@@ -13,9 +14,11 @@ export interface Invoice {
 }
 
 export class InvoiceError extends Error {
-  constructor(message: string) {
+  code: ErrorCode;
+  constructor(code: ErrorCode, message: string) {
     super(message);
     this.name = 'InvoiceError';
+    this.code = code;
   }
 }
 
@@ -38,12 +41,12 @@ export function nextInvoiceNumber(previous: string | undefined, year: number): s
 /** Vérifie la cohérence d'une facture (totaux, signes, numéro). */
 export function validateInvoice(invoice: Invoice): void {
   if (!invoice.number.trim()) {
-    throw new InvoiceError('Numéro de facture requis');
+    throw new InvoiceError(ErrorCodes.INVOICE_INVALID, 'Numéro de facture requis');
   }
   if (invoice.netCents < 0 || invoice.vatCents < 0 || invoice.totalCents < 0) {
-    throw new InvoiceError('Montants négatifs invalides');
+    throw new InvoiceError(ErrorCodes.INVOICE_INVALID, 'Montants négatifs invalides');
   }
   if (invoice.netCents + invoice.vatCents !== invoice.totalCents) {
-    throw new InvoiceError('Total incohérent (net + TVA ≠ total)');
+    throw new InvoiceError(ErrorCodes.INVOICE_INVALID, 'Total incohérent (net + TVA ≠ total)');
   }
 }

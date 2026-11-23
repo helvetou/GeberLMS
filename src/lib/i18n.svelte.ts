@@ -6,6 +6,7 @@ import {
   type Locale,
   type MessageParams,
 } from '$lib/domain/i18n';
+import { isErrorCode } from '$lib/domain/errors';
 
 /**
  * Internationalisation de l'interface via contexte Svelte. Le layout racine
@@ -19,6 +20,8 @@ export interface I18n {
   dir: Direction;
   t(key: string, params?: MessageParams): string;
   tStatus(value: string): string;
+  /** Traduit un code d'erreur, ou renvoie la valeur brute si non catalogue. */
+  tError(value: string): string;
 }
 
 export const I18N_KEY: symbol = Symbol('i18n');
@@ -33,6 +36,7 @@ export function initI18n(locale: Locale): I18n {
       const result = translate(locale, key);
       return result === key ? value : result;
     },
+    tError: (value) => (isErrorCode(value) ? translate(locale, value) : value),
   };
   setContext(I18N_KEY, i18n);
   return i18n;

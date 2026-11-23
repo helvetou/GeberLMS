@@ -1,3 +1,4 @@
+import { ErrorCodes } from '$lib/domain/errors';
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { createDb } from '$lib/server/db';
@@ -13,7 +14,7 @@ export const load: PageServerLoad = async ({ locals, platform }) => {
 
   const dbBinding = platform?.env?.DB;
   if (!dbBinding) {
-    return { view: null, error: 'Base de données indisponible' };
+    return { view: null, error: ErrorCodes.DB_UNAVAILABLE };
   }
 
   const db = createDb(dbBinding);

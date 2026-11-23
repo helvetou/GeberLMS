@@ -6,16 +6,20 @@ import {
   validateQuizQuestion,
   buildQuizPrompt,
   parseGeneratedQuiz,
+  QuizError,
   type AnswerSelection,
   type QuizQuestion,
   type QuizResult,
 } from '$lib/domain/quiz';
 import { recordLessonProgress } from './progress';
+import { ErrorCodes, type ErrorCode } from '$lib/domain/errors';
 
 export class QuizServiceError extends Error {
-  constructor(message: string) {
+  code: ErrorCode;
+  constructor(code: ErrorCode, message: string) {
     super(message);
     this.name = 'QuizServiceError';
+    this.code = code;
   }
 }
 
@@ -60,10 +64,10 @@ export async function createQuizQuestion(
     .where(eq(lessons.id, input.lessonId))
     .get();
   if (!lesson) {
-    throw new QuizServiceError('Leçon introuvable');
+    throw new QuizServiceError(ErrorCodes.LESSON_NOT_FOUND, 'Leçon introuvable');
   }
   if (lesson.type !== 'quiz') {
-    throw new QuizServiceError('Cette leçon n\u2019est pas un quiz');
+    throw new QuizServiceError(ErrorCodes.LESSON_NOT_QUIZ, 'Cette leçon n\u2019est pas un quiz');
   }
 
   const question: QuizQuestion = {
@@ -77,8 +81,8 @@ export async function createQuizQuestion(
   try {
     validateQuizQuestion(question);
   } catch (err) {
-    if (err instanceof Error) {
-      throw new QuizServiceError(err.message);
+    if (err instanceof QuizError) {
+      throw new QuizServiceError(err.code, err.message);
     }
     throw err;
   }
@@ -99,7 +103,7 @@ export async function createQuizQuestion(
 export async function deleteQuizQuestion(db: DB, id: string): Promise<void> {
   const row = await db.select({ id: quizQuestions.id }).from(quizQuestions).where(eq(quizQuestions.id, id)).get();
   if (!row) {
-    throw new QuizServiceError('Question introuvable');
+    throw new QuizServiceError(ErrorCodes.QUESTION_INVALID, 'Question introuvable');
   }
   await db.delete(quizQuestions).where(eq(quizQuestions.id, id)).run();
 }
@@ -149,7 +153,7 @@ export async function gradeQuizForLesson(
 ): Promise<QuizResult> {
   const questions = await listQuizQuestions(db, input.lessonId);
   if (questions.length === 0) {
-    throw new QuizServiceError('Ce quiz ne contient aucune question');
+    throw new QuizServiceError(ErrorCodes.QUIZ_EMPTY, 'Ce quiz ne contient aucune question');
   }
 
   const result = gradeQuiz(questions, input.answers);
@@ -185,17 +189,26 @@ export async function generateQuizQuestions(
     .where(eq(lessons.id, input.lessonId))
     .get();
   if (!lesson) {
-    throw new QuizServiceError('Leçon introuvable');
+    throw new QuizServiceError(ErrorCodes.LESSON_NOT_FOUND, 'Leçon introuvable');
   }
   if (lesson.type !== 'quiz') {
-    throw new QuizServiceError('Cette leçon n\u2019est pas un quiz');
+    throw new QuizServiceError(ErrorCodes.LESSON_NOT_QUIZ, 'Cette leçon n\u2019est pas un quiz');
   }
   if (!input.topic.trim()) {
-    throw new QuizServiceError('Sujet requis');
+    throw new QuizServiceError(ErrorCodes.TOPIC_REQUIRED, 'Sujet requis');
   }
 
   const raw = await llm.generate(buildQuizPrompt(input.topic, input.count));
-  const questions = parseGeneratedQuiz(raw);
+
+  let questions;
+  try {
+    questions = parseGeneratedQuiz(raw);
+  } catch (err) {
+    if (err instanceof QuizError) {
+      throw new QuizServiceError(err.code, err.message);
+    }
+    throw err;
+  }
 
   for (const q of questions) {
     await createQuizQuestion(db, {

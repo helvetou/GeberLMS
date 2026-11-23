@@ -3,7 +3,7 @@
 
 PRAGMA foreign_keys = ON;
 
-CREATE TABLE quiz_questions (
+CREATE TABLE IF NOT EXISTS quiz_questions (
   id            TEXT PRIMARY KEY,
   lesson_id     TEXT NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,
   position      INTEGER NOT NULL DEFAULT 0,
@@ -14,4 +14,4 @@ CREATE TABLE quiz_questions (
   created_at    TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
-CREATE INDEX idx_quiz_questions_lesson ON quiz_questions (lesson_id);
+CREATE INDEX IF NOT EXISTS idx_quiz_questions_lesson ON quiz_questions (lesson_id);

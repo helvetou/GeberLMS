@@ -1,3 +1,4 @@
+import { ErrorCodes } from '$lib/domain/errors';
 import { fail, type Actions } from '@sveltejs/kit';
 import { createDb } from '$lib/server/db';
 import { createUser } from '$lib/server/auth';
@@ -7,12 +8,12 @@ import type { Role } from '$lib/domain/roles';
 export const actions: Actions = {
   create: async ({ request, locals, platform }) => {
     if (!locals.user || !canCreateAccount(locals.user.role)) {
-      return fail(403, { error: 'Accès refusé' });
+      return fail(403, { error: ErrorCodes.ACCESS_DENIED });
     }
 
     const dbBinding = platform?.env?.DB;
     if (!dbBinding) {
-      return fail(503, { error: 'Base de données indisponible' });
+      return fail(503, { error: ErrorCodes.DB_UNAVAILABLE });
     }
 
     const data = await request.formData();
@@ -23,10 +24,10 @@ export const actions: Actions = {
     const password = String(data.get('password') ?? '') || undefined;
 
     if (role !== 'learner' && role !== 'tutor') {
-      return fail(400, { error: 'Rôle invalide' });
+      return fail(400, { error: ErrorCodes.ROLE_INVALID });
     }
     if (!email) {
-      return fail(400, { error: 'Email requis' });
+      return fail(400, { error: ErrorCodes.EMAIL_REQUIRED });
     }
 
     const db = createDb(dbBinding);

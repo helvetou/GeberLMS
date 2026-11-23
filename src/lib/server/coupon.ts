@@ -1,12 +1,15 @@
 import { eq } from 'drizzle-orm';
 import type { DB } from './db';
 import { coupons } from './db/schema';
-import { validateCoupon, type Coupon } from '$lib/domain/coupon';
+import { validateCoupon, CouponError, type Coupon } from '$lib/domain/coupon';
+import { ErrorCodes, type ErrorCode } from '$lib/domain/errors';
 
 export class CouponServiceError extends Error {
-  constructor(message: string) {
+  code: ErrorCode;
+  constructor(code: ErrorCode, message: string) {
     super(message);
     this.name = 'CouponServiceError';
+    this.code = code;
   }
 }
 
@@ -46,9 +49,9 @@ export async function findCouponByCode(db: DB, code: string): Promise<CouponReco
 
 export async function createCoupon(db: DB, input: CreateCouponInput): Promise<string> {
   const code = input.code.trim();
-  if (!code) throw new CouponServiceError('Code requis');
+  if (!code) throw new CouponServiceError(ErrorCodes.COUPON_CODE_REQUIRED, 'Code requis');
   if (input.type !== 'percent' && input.type !== 'amount') {
-    throw new CouponServiceError('Type de coupon invalide');
+    throw new CouponServiceError(ErrorCodes.COUPON_TYPE_INVALID, 'Type de coupon invalide');
   }
 
   const value = Number(input.value);
@@ -68,8 +71,8 @@ export async function createCoupon(db: DB, input: CreateCouponInput): Promise<st
   try {
     validateCoupon(coupon);
   } catch (err) {
-    if (err instanceof Error) {
-      throw new CouponServiceError(err.message);
+    if (err instanceof CouponError) {
+      throw new CouponServiceError(err.code, err.message);
     }
     throw err;
   }
@@ -80,7 +83,7 @@ export async function createCoupon(db: DB, input: CreateCouponInput): Promise<st
     .where(eq(coupons.code, code))
     .get();
   if (existing) {
-    throw new CouponServiceError('Ce code existe déjà');
+    throw new CouponServiceError(ErrorCodes.COUPON_EXISTS, 'Ce code existe déjà');
   }
 
   const id = crypto.randomUUID();

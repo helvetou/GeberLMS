@@ -25,20 +25,30 @@ npm run check      # svelte-check (app + server typing)
 npm test           # Vitest tests (business logic)
 npm run test:watch
 npm run typecheck  # business-logic typing (tsc)
+npm run db:migrate # apply D1 migrations (idempotent, see below)
+npm run db:migrate:remote
+npm run smoke      # production smoke test (HTTP, PROD_URL env)
+npm run test:e2e   # Playwright E2E (requires `npx playwright install`)
 ```
 
 ## Local database (D1)
 
 ```bash
-# apply all migrations (0001 → 0006)
-for f in migrations/*.sql; do npx wrangler d1 execute DB --local --file "$f"; done
+# apply all migrations (idempotent — safe to re-run)
+npm run db:migrate
 
-# create the admin
+# create the admin (idempotent — safe to re-run)
 SEED_ADMIN_EMAIL=admin@example.com SEED_ADMIN_PASSWORD=changeme npx tsx scripts/seed-admin.ts
 
 # demo data (tutor/learner/course)
 npx tsx scripts/seed-demo.ts
 ```
+
+> **Local dev prerequisite**: the Cloudflare bindings (`DB`, `R2`, `AI`) are
+> provisioned through the platform. Run `npx wrangler login` (or export
+> `CLOUDFLARE_API_TOKEN`) before `npm run dev`. Quiz generation degrades
+> gracefully to a **local deterministic mock** when the Workers AI binding is
+> unavailable, so the full flow works offline.
 
 ## Deployment (Cloudflare)
 
@@ -51,7 +61,7 @@ The SvelteKit build **must** run before `wrangler deploy`
    ```bash
    npx wrangler d1 create geberlms
    # copy the returned database_id into wrangler.toml (replace the placeholder)
-   for f in migrations/*.sql; do npx wrangler d1 execute geberlms --remote --file "$f"; done
+   npm run db:migrate:remote
    SEED_ADMIN_EMAIL=admin@example.com SEED_ADMIN_PASSWORD=changeme npx tsx scripts/seed-admin.ts --remote
    ```
 3. **Deploy**:

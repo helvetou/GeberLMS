@@ -1,3 +1,4 @@
+import { ErrorCodes } from '$lib/domain/errors';
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { createDb } from '$lib/server/db';
@@ -18,17 +19,17 @@ export const load: PageServerLoad = async ({ locals, platform }) => {
 export const actions: Actions = {
   enroll: async ({ request, locals, platform }) => {
     if (locals.user?.role !== 'admin') {
-      return fail(403, { error: 'Accès refusé' });
+      return fail(403, { error: ErrorCodes.ACCESS_DENIED });
     }
     const dbBinding = platform?.env?.DB;
-    if (!dbBinding) return fail(503, { error: 'Base de données indisponible' });
+    if (!dbBinding) return fail(503, { error: ErrorCodes.DB_UNAVAILABLE });
 
     const data = await request.formData();
     const learnerEmail = String(data.get('learnerEmail') ?? '').trim();
     const courseId = String(data.get('courseId') ?? '').trim();
     const couponCode = String(data.get('couponCode') ?? '').trim();
     if (!learnerEmail || !courseId) {
-      return fail(400, { error: 'Email et cours requis' });
+      return fail(400, { error: ErrorCodes.PARAMS_REQUIRED });
     }
 
     const db = createDb(dbBinding);
@@ -47,7 +48,7 @@ export const actions: Actions = {
       return { ok: true, totalCents };
     } catch (err) {
       if (err instanceof EnrollmentServiceError) {
-        return fail(400, { error: err.message });
+        return fail(400, { error: err.code });
       }
       throw err;
     }

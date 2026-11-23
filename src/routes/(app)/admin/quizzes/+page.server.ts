@@ -1,3 +1,4 @@
+import { ErrorCodes } from '$lib/domain/errors';
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { createDb } from '$lib/server/db';
@@ -9,6 +10,7 @@ import {
   QuizServiceError,
   type QuizLlm,
 } from '$lib/server/quiz';
+import { mockQuizQuestions } from '$lib/domain/quiz';
 
 export const load: PageServerLoad = async ({ locals, platform }) => {
   if (locals.user?.role !== 'admin') {
@@ -16,16 +18,16 @@ export const load: PageServerLoad = async ({ locals, platform }) => {
   }
   const db = platform?.env?.DB ? createDb(platform.env.DB) : null;
   if (!db) {
-    return { lessons: [], error: 'Base de données indisponible' };
+    return { lessons: [], error: ErrorCodes.DB_UNAVAILABLE };
   }
   return { lessons: await listQuizLessons(db) };
 };
 
 export const actions: Actions = {
   createQuestion: async ({ request, locals, platform }) => {
-    if (locals.user?.role !== 'admin') return fail(403, { error: 'Accès refusé' });
+    if (locals.user?.role !== 'admin') return fail(403, { error: ErrorCodes.ACCESS_DENIED });
     const db = platform?.env?.DB ? createDb(platform.env.DB) : null;
-    if (!db) return fail(503, { error: 'Base de données indisponible' });
+    if (!db) return fail(503, { error: ErrorCodes.DB_UNAVAILABLE });
 
     const data = await request.formData();
     const lessonId = String(data.get('lessonId') ?? '');
@@ -41,49 +43,54 @@ export const actions: Actions = {
     try {
       await createQuizQuestion(db, { lessonId, prompt, choices, correctIndex, points });
     } catch (err) {
-      if (err instanceof QuizServiceError) return fail(400, { error: err.message });
+      if (err instanceof QuizServiceError) return fail(400, { error: err.code });
       throw err;
     }
     throw redirect(303, '/admin/quizzes');
   },
 
   deleteQuestion: async ({ request, locals, platform }) => {
-    if (locals.user?.role !== 'admin') return fail(403, { error: 'Accès refusé' });
+    if (locals.user?.role !== 'admin') return fail(403, { error: ErrorCodes.ACCESS_DENIED });
     const db = platform?.env?.DB ? createDb(platform.env.DB) : null;
-    if (!db) return fail(503, { error: 'Base de données indisponible' });
+    if (!db) return fail(503, { error: ErrorCodes.DB_UNAVAILABLE });
 
     const data = await request.formData();
     try {
       await deleteQuizQuestion(db, String(data.get('id') ?? ''));
     } catch (err) {
-      if (err instanceof QuizServiceError) return fail(400, { error: err.message });
+      if (err instanceof QuizServiceError) return fail(400, { error: err.code });
       throw err;
     }
     throw redirect(303, '/admin/quizzes');
   },
 
   generate: async ({ request, locals, platform }) => {
-    if (locals.user?.role !== 'admin') return fail(403, { error: 'Accès refusé' });
+    if (locals.user?.role !== 'admin') return fail(403, { error: ErrorCodes.ACCESS_DENIED });
     const dbBinding = platform?.env?.DB;
-    const aiBinding = platform?.env?.AI;
-    if (!dbBinding || !aiBinding) return fail(503, { error: 'Service d\u2019IA indisponible' });
+    if (!dbBinding) return fail(503, { error: ErrorCodes.DB_UNAVAILABLE });
 
     const data = await request.formData();
     const lessonId = String(data.get('lessonId') ?? '');
     const topic = String(data.get('topic') ?? '');
     const count = Number(data.get('count') ?? '5');
 
-    const ai = aiBinding as unknown as {
-      run: (model: string, inputs: unknown) => Promise<{ response?: string }>;
-    };
-    const llm: QuizLlm = {
-      generate: async (prompt) => {
-        const res = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
-          messages: [{ role: 'user', content: prompt }],
-        });
-        return res.response ?? '';
-      },
-    };
+    const aiBinding = platform?.env?.AI;
+    const llm: QuizLlm = aiBinding
+      ? {
+          generate: async (prompt) => {
+            const ai = aiBinding as unknown as {
+              run: (model: string, inputs: unknown) => Promise<{ response?: string }>;
+            };
+            const res = await ai.run('@cf/meta/llama-3.1-8b-instruct', {
+              messages: [{ role: 'user', content: prompt }],
+            });
+            return res.response ?? '';
+          },
+        }
+      : {
+          // Mock local hors ligne (m2) : dev/test sans binding AI distant.
+          generate: async () => JSON.stringify(mockQuizQuestions(topic, count)),
+        };
 
     try {
       const created = await generateQuizQuestions(createDb(dbBinding), llm, {
@@ -93,7 +100,7 @@ export const actions: Actions = {
       });
       return { ok: true, created };
     } catch (err) {
-      if (err instanceof QuizServiceError) return fail(400, { error: err.message });
+      if (err instanceof QuizServiceError) return fail(400, { error: err.code });
       throw err;
     }
   },

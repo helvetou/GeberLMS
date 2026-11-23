@@ -1,6 +1,6 @@
 <script lang="ts">
   import { useI18n } from '$lib/i18n.svelte';
-  const { t, tStatus } = useI18n();
+  const { t, tStatus, tError } = useI18n();
   import type { PageProps } from './$types';
   let { data }: PageProps = $props();
 </script>
@@ -32,5 +32,5 @@
     </ul>
   {/if}
 {:else}
-  <p role="alert">{data.error}</p>
+  <p role="alert">{tError(data.error)}</p>
 {/if}

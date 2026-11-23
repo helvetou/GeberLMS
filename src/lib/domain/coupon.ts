@@ -1,3 +1,5 @@
+import { ErrorCodes, type ErrorCode } from './errors';
+
 /**
  * Modèle de coupon / code promo.
  *
@@ -21,9 +23,11 @@ export interface Coupon {
 }
 
 export class CouponError extends Error {
-  constructor(message: string) {
+  code: ErrorCode;
+  constructor(code: ErrorCode, message: string) {
     super(message);
     this.name = 'CouponError';
+    this.code = code;
   }
 }
 
@@ -46,27 +50,27 @@ export function discountFor(
 /** Lève une CouponError si le coupon ne peut pas être appliqué. */
 export function validateCoupon(coupon: Coupon, now: Date = new Date()): void {
   if (coupon.enabled === false) {
-    throw new CouponError('Coupon désactivé');
+    throw new CouponError(ErrorCodes.COUPON_DISABLED, 'Coupon désactivé');
   }
 
   if (coupon.type === 'percent') {
     if (coupon.value < 0 || coupon.value > 100) {
-      throw new CouponError('Un coupon en % doit être entre 0 et 100');
+      throw new CouponError(ErrorCodes.COUPON_PERCENT_RANGE, 'Un coupon en % doit être entre 0 et 100');
     }
   } else if (coupon.type === 'amount') {
     if (coupon.value < 0) {
-      throw new CouponError('Un coupon en montant doit être positif ou nul');
+      throw new CouponError(ErrorCodes.COUPON_AMOUNT_NEGATIVE, 'Un coupon en montant doit être positif ou nul');
     }
   } else {
-    throw new CouponError('Type de coupon inconnu');
+    throw new CouponError(ErrorCodes.COUPON_TYPE_INVALID, 'Type de coupon inconnu');
   }
 
   if (coupon.expiresAt && now > new Date(coupon.expiresAt)) {
-    throw new CouponError('Coupon expiré');
+    throw new CouponError(ErrorCodes.COUPON_EXPIRED, 'Coupon expiré');
   }
 
   if (coupon.maxUses !== undefined && (coupon.usedCount ?? 0) >= coupon.maxUses) {
-    throw new CouponError('Limite d\u2019utilisation du coupon atteinte');
+    throw new CouponError(ErrorCodes.COUPON_LIMIT_REACHED, 'Limite d\u2019utilisation du coupon atteinte');
   }
 }
 

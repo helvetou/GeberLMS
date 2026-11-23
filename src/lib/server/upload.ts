@@ -2,12 +2,15 @@ import { eq } from 'drizzle-orm';
 import type { R2Bucket } from '@cloudflare/workers-types';
 import type { DB } from './db';
 import { uploads } from './db/schema';
-import { validateUpload } from '$lib/domain/upload';
+import { validateUpload, UploadError } from '$lib/domain/upload';
+import { ErrorCodes, type ErrorCode } from '$lib/domain/errors';
 
 export class UploadServiceError extends Error {
-  constructor(message: string) {
+  code: ErrorCode;
+  constructor(code: ErrorCode, message: string) {
     super(message);
     this.name = 'UploadServiceError';
+    this.code = code;
   }
 }
 
@@ -29,11 +32,18 @@ export async function createUpload(
   file: UploadFile,
   lessonId?: string,
 ): Promise<string> {
-  validateUpload({
-    filename: file.filename,
-    contentType: file.contentType,
-    sizeBytes: file.data.byteLength,
-  });
+  try {
+    validateUpload({
+      filename: file.filename,
+      contentType: file.contentType,
+      sizeBytes: file.data.byteLength,
+    });
+  } catch (err) {
+    if (err instanceof UploadError) {
+      throw new UploadServiceError(err.code, err.message);
+    }
+    throw err;
+  }
 
   const id = crypto.randomUUID();
   const safeName = file.filename.replace(/[^a-zA-Z0-9._-]/g, '_');

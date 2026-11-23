@@ -9,7 +9,7 @@
   import TriangleAlertIcon from '@lucide/svelte/icons/triangle-alert';
   import type { PageProps } from './$types';
 
-  const { t } = useI18n();
+  const { t, tError } = useI18n();
   let { form }: PageProps = $props();
 </script>
 
@@ -56,7 +56,7 @@
           {#if form?.error}
             <Alert.Root variant="destructive">
               <TriangleAlertIcon />
-              <Alert.Description>{form.error}</Alert.Description>
+              <Alert.Description>{tError(form.error)}</Alert.Description>
             </Alert.Root>
           {/if}
 

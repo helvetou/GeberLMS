@@ -4,6 +4,7 @@ import {
   gradeQuiz,
   parseGeneratedQuiz,
   buildQuizPrompt,
+  mockQuizQuestions,
   QuizError,
   type QuizQuestion,
   type AnswerSelection,
@@ -114,11 +115,37 @@ describe('parseGeneratedQuiz (FR-31)', () => {
 });
 
 describe('buildQuizPrompt (FR-31)', () => {
+
   it('includes the topic, the count and the JSON format', () => {
     const p = buildQuizPrompt('Le subjonctif', 3);
     expect(p).toContain('Le subjonctif');
     expect(p).toContain('3');
     expect(p).toContain('JSON');
     expect(p).toContain('correctIndex');
+  });
+});
+
+describe('mockQuizQuestions (m2 — dev local sans IA)', () => {
+  it('returns the requested number of valid questions (capped at 10)', () => {
+    const qs = mockQuizQuestions('Sujet test', 4);
+    expect(qs).toHaveLength(4);
+    for (const q of qs) {
+      expect(() =>
+        validateQuizQuestion({ id: 'x', lessonId: 'l', prompt: q.prompt, choices: q.choices, correctIndex: q.correctIndex }),
+      ).not.toThrow();
+    }
+  });
+
+  it('defaults to 3 questions for invalid counts', () => {
+    expect(mockQuizQuestions('x', 0)).toHaveLength(3);
+    expect(mockQuizQuestions('x', NaN)).toHaveLength(3);
+  });
+
+  it('caps at 10 questions', () => {
+    expect(mockQuizQuestions('x', 50)).toHaveLength(10);
+  });
+
+  it('is deterministic', () => {
+    expect(mockQuizQuestions('stable', 3)).toEqual(mockQuizQuestions('stable', 3));
   });
 });

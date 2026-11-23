@@ -1,14 +1,17 @@
 import { desc, eq, inArray } from 'drizzle-orm';
 import type { DB } from './db';
 import { enrollments, users, courses, payments, invoices } from './db/schema';
-import { activateEnrollment } from '$lib/domain/enrollment';
-import { confirmPayment } from '$lib/domain/payment';
-import { nextInvoiceNumber, validateInvoice } from '$lib/domain/invoice';
+import { activateEnrollment, EnrollmentError } from '$lib/domain/enrollment';
+import { confirmPayment, PaymentError } from '$lib/domain/payment';
+import { nextInvoiceNumber, validateInvoice, InvoiceError } from '$lib/domain/invoice';
+import { ErrorCodes, type ErrorCode } from '$lib/domain/errors';
 
 export class PaymentServiceError extends Error {
-  constructor(message: string) {
+  code: ErrorCode;
+  constructor(code: ErrorCode, message: string) {
     super(message);
     this.name = 'PaymentServiceError';
+    this.code = code;
   }
 }
 
@@ -74,31 +77,46 @@ export async function confirmEnrollmentPayment(
     .where(eq(enrollments.id, enrollmentId))
     .get();
   if (!enrollment) {
-    throw new PaymentServiceError('Inscription introuvable');
+    throw new PaymentServiceError(ErrorCodes.ENROLLMENT_NOT_FOUND, 'Inscription introuvable');
   }
 
   // Valide la transition pending → active (lève sinon).
-  activateEnrollment({
-    id: enrollment.id,
-    learnerId: enrollment.learnerId,
-    courseId: enrollment.courseId,
-    payerId: enrollment.payerId,
-    status: enrollment.status,
-  });
+  try {
+    activateEnrollment({
+      id: enrollment.id,
+      learnerId: enrollment.learnerId,
+      courseId: enrollment.courseId,
+      payerId: enrollment.payerId,
+      status: enrollment.status,
+    });
+  } catch (err) {
+    if (err instanceof EnrollmentError) {
+      throw new PaymentServiceError(err.code, err.message);
+    }
+    throw err;
+  }
 
   const now = new Date().toISOString();
-  const payment = confirmPayment(
-    {
-      id: crypto.randomUUID(),
-      enrollmentId,
-      provider: 'payoneer',
-      amountCents: enrollment.totalCents,
-      currency: 'EUR',
-      status: 'pending',
-      createdAt: now,
-    },
-    now,
-  );
+  let payment;
+  try {
+    payment = confirmPayment(
+      {
+        id: crypto.randomUUID(),
+        enrollmentId,
+        provider: 'payoneer',
+        amountCents: enrollment.totalCents,
+        currency: 'EUR',
+        status: 'pending',
+        createdAt: now,
+      },
+      now,
+    );
+  } catch (err) {
+    if (err instanceof PaymentError) {
+      throw new PaymentServiceError(err.code, err.message);
+    }
+    throw err;
+  }
 
   await db
     .insert(payments)
@@ -134,7 +152,14 @@ export async function confirmEnrollmentPayment(
     totalCents: enrollment.totalCents,
     createdAt: now,
   };
-  validateInvoice(invoice);
+  try {
+    validateInvoice(invoice);
+  } catch (err) {
+    if (err instanceof InvoiceError) {
+      throw new PaymentServiceError(err.code, err.message);
+    }
+    throw err;
+  }
 
   await db
     .insert(invoices)

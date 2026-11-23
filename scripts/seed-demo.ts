@@ -50,7 +50,7 @@ INSERT INTO enrollments (id, learner_id, course_id, payer_id, status, net_cents,
 VALUES ('demo-enroll', 'demo-learner', 'demo-course', 'demo-tutor', 'active', 10000, 20, 2000, 12000, '${now}');
 
 INSERT INTO progress (id, enrollment_id, lesson_id, status, updated_at)
-VALUES ('demo-progress', 'demo-enroll', 'demo-lesson', 'completed', '${now}');
+VALUES ('demo-progress', 'demo-enroll', 'demo-lesson', 'not_started', '${now}');
 `;
 
   const dir = mkdtempSync(join(tmpdir(), 'geberlms-demo-'));

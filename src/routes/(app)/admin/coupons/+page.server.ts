@@ -1,3 +1,4 @@
+import { ErrorCodes } from '$lib/domain/errors';
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { createDb } from '$lib/server/db';
@@ -9,7 +10,7 @@ export const load: PageServerLoad = async ({ locals, platform }) => {
   }
   const db = platform?.env?.DB ? createDb(platform.env.DB) : null;
   if (!db) {
-    return { coupons: [], error: 'Base de données indisponible' };
+    return { coupons: [], error: ErrorCodes.DB_UNAVAILABLE };
   }
   return { coupons: await listCoupons(db) };
 };
@@ -17,11 +18,11 @@ export const load: PageServerLoad = async ({ locals, platform }) => {
 export const actions: Actions = {
   create: async ({ request, locals, platform }) => {
     if (locals.user?.role !== 'admin') {
-      return fail(403, { error: 'Accès refusé' });
+      return fail(403, { error: ErrorCodes.ACCESS_DENIED });
     }
     const db = platform?.env?.DB ? createDb(platform.env.DB) : null;
     if (!db) {
-      return fail(503, { error: 'Base de données indisponible' });
+      return fail(503, { error: ErrorCodes.DB_UNAVAILABLE });
     }
 
     const data = await request.formData();
@@ -36,7 +37,7 @@ export const actions: Actions = {
       await createCoupon(db, { code, type, value, expiresAt, maxUses });
     } catch (err) {
       if (err instanceof CouponServiceError) {
-        return fail(400, { error: err.message });
+        return fail(400, { error: err.code });
       }
       throw err;
     }

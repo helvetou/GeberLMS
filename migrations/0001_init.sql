@@ -4,7 +4,7 @@
 
 PRAGMA foreign_keys = ON;
 
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
   id            TEXT PRIMARY KEY,
   role          TEXT NOT NULL CHECK (role IN ('admin', 'learner', 'tutor')),
   self_payer    INTEGER NOT NULL DEFAULT 0,
@@ -17,14 +17,14 @@ CREATE TABLE users (
   updated_at    TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
-CREATE TABLE guardianships (
+CREATE TABLE IF NOT EXISTS guardianships (
   tutor_id   TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   learner_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   PRIMARY KEY (tutor_id, learner_id)
 );
 
-CREATE TABLE courses (
+CREATE TABLE IF NOT EXISTS courses (
   id         TEXT PRIMARY KEY,
   slug       TEXT NOT NULL UNIQUE,
   title      TEXT NOT NULL,
@@ -34,7 +34,7 @@ CREATE TABLE courses (
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
-CREATE TABLE modules (
+CREATE TABLE IF NOT EXISTS modules (
   id         TEXT PRIMARY KEY,
   course_id  TEXT NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
   position   INTEGER NOT NULL DEFAULT 0,
@@ -43,7 +43,7 @@ CREATE TABLE modules (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
-CREATE TABLE lessons (
+CREATE TABLE IF NOT EXISTS lessons (
   id          TEXT PRIMARY KEY,
   module_id   TEXT NOT NULL REFERENCES modules(id) ON DELETE CASCADE,
   position    INTEGER NOT NULL DEFAULT 0,
@@ -54,7 +54,7 @@ CREATE TABLE lessons (
   created_at  TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
-CREATE TABLE resources (
+CREATE TABLE IF NOT EXISTS resources (
   id         TEXT PRIMARY KEY,
   lesson_id  TEXT NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,
   title      TEXT NOT NULL,
@@ -63,7 +63,7 @@ CREATE TABLE resources (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
-CREATE TABLE coupons (
+CREATE TABLE IF NOT EXISTS coupons (
   id          TEXT PRIMARY KEY,
   code        TEXT NOT NULL UNIQUE,
   type        TEXT NOT NULL CHECK (type IN ('percent', 'amount')),
@@ -76,7 +76,7 @@ CREATE TABLE coupons (
   created_at  TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
-CREATE TABLE enrollments (
+CREATE TABLE IF NOT EXISTS enrollments (
   id               TEXT PRIMARY KEY,
   learner_id       TEXT NOT NULL REFERENCES users(id),
   course_id        TEXT NOT NULL REFERENCES courses(id),
@@ -92,7 +92,7 @@ CREATE TABLE enrollments (
   UNIQUE (learner_id, course_id)
 );
 
-CREATE TABLE payments (
+CREATE TABLE IF NOT EXISTS payments (
   id            TEXT PRIMARY KEY,
   enrollment_id TEXT REFERENCES enrollments(id),
   provider      TEXT NOT NULL DEFAULT 'payoneer',
@@ -103,7 +103,7 @@ CREATE TABLE payments (
   created_at    TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
-CREATE TABLE invoices (
+CREATE TABLE IF NOT EXISTS invoices (
   id               TEXT PRIMARY KEY,
   enrollment_id    TEXT NOT NULL REFERENCES enrollments(id),
   number           TEXT NOT NULL UNIQUE,
@@ -115,7 +115,7 @@ CREATE TABLE invoices (
   created_at       TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
-CREATE TABLE progress (
+CREATE TABLE IF NOT EXISTS progress (
   id            TEXT PRIMARY KEY,
   enrollment_id TEXT NOT NULL REFERENCES enrollments(id) ON DELETE CASCADE,
   lesson_id     TEXT NOT NULL REFERENCES lessons(id) ON DELETE CASCADE,
@@ -126,7 +126,7 @@ CREATE TABLE progress (
   UNIQUE (enrollment_id, lesson_id)
 );
 
-CREATE TABLE uploads (
+CREATE TABLE IF NOT EXISTS uploads (
   id           TEXT PRIMARY KEY,
   learner_id   TEXT NOT NULL REFERENCES users(id),
   lesson_id    TEXT REFERENCES lessons(id),
@@ -136,7 +136,7 @@ CREATE TABLE uploads (
   created_at   TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
-CREATE TABLE activity_logs (
+CREATE TABLE IF NOT EXISTS activity_logs (
   id          TEXT PRIMARY KEY,
   actor_id    TEXT REFERENCES users(id),
   action      TEXT NOT NULL,
@@ -146,10 +146,10 @@ CREATE TABLE activity_logs (
   created_at  TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
-CREATE INDEX idx_modules_course       ON modules (course_id);
-CREATE INDEX idx_lessons_module       ON lessons (module_id);
-CREATE INDEX idx_resources_lesson     ON resources (lesson_id);
-CREATE INDEX idx_enrollments_learner  ON enrollments (learner_id);
-CREATE INDEX idx_enrollments_payer    ON enrollments (payer_id);
-CREATE INDEX idx_progress_enrollment  ON progress (enrollment_id);
-CREATE INDEX idx_activity_actor       ON activity_logs (actor_id);
+CREATE INDEX IF NOT EXISTS idx_modules_course       ON modules (course_id);
+CREATE INDEX IF NOT EXISTS idx_lessons_module       ON lessons (module_id);
+CREATE INDEX IF NOT EXISTS idx_resources_lesson     ON resources (lesson_id);
+CREATE INDEX IF NOT EXISTS idx_enrollments_learner  ON enrollments (learner_id);
+CREATE INDEX IF NOT EXISTS idx_enrollments_payer    ON enrollments (payer_id);
+CREATE INDEX IF NOT EXISTS idx_progress_enrollment  ON progress (enrollment_id);
+CREATE INDEX IF NOT EXISTS idx_activity_actor       ON activity_logs (actor_id);

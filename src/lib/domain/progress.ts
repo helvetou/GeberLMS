@@ -1,6 +1,7 @@
 /**
  * Progression académique (FR-20).
  */
+import { ErrorCodes, type ErrorCode } from './errors';
 export type ProgressStatus = 'not_started' | 'in_progress' | 'completed';
 
 export const PROGRESS_STATUSES = ['not_started', 'in_progress', 'completed'] as const;
@@ -35,9 +36,11 @@ export function completionRatio(completed: number, total: number): number {
 }
 
 export class ProgressError extends Error {
-  constructor(message: string) {
+  code: ErrorCode;
+  constructor(code: ErrorCode, message: string) {
     super(message);
     this.name = 'ProgressError';
+    this.code = code;
   }
 }
 
@@ -58,7 +61,7 @@ export interface RecordProgressInput {
  */
 export function recordProgress(input: RecordProgressInput): ProgressEntry {
   if (input.score !== undefined && (input.score < 0 || input.score > 100)) {
-    throw new ProgressError('Score hors bornes (0–100)');
+    throw new ProgressError(ErrorCodes.SCORE_OUT_OF_RANGE, 'Score hors bornes (0–100)');
   }
 
   const completedAt =

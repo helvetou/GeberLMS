@@ -1,6 +1,7 @@
 /**
  * E-testing / quiz (FR-30) : questions à choix, correction automatique.
  */
+import { ErrorCodes, type ErrorCode } from './errors';
 export interface QuizQuestion {
   id: string;
   lessonId: string;
@@ -31,22 +32,24 @@ export interface QuizResult {
 }
 
 export class QuizError extends Error {
-  constructor(message: string) {
+  code: ErrorCode;
+  constructor(code: ErrorCode, message: string) {
     super(message);
     this.name = 'QuizError';
+    this.code = code;
   }
 }
 
 /** Valide la structure d'une question. Lève QuizError si invalide. */
 export function validateQuizQuestion(q: QuizQuestion): void {
   if (!q.prompt.trim()) {
-    throw new QuizError('Énoncé requis');
+    throw new QuizError(ErrorCodes.QUESTION_INVALID, 'Énoncé requis');
   }
   if (q.choices.length < 2) {
-    throw new QuizError('Au moins deux choix requis');
+    throw new QuizError(ErrorCodes.QUESTION_INVALID, 'Au moins deux choix requis');
   }
   if (!Number.isInteger(q.correctIndex) || q.correctIndex < 0 || q.correctIndex >= q.choices.length) {
-    throw new QuizError('Index de bonne réponse hors bornes');
+    throw new QuizError(ErrorCodes.QUESTION_INVALID, 'Index de bonne réponse hors bornes');
   }
 }
 
@@ -80,6 +83,19 @@ export interface GeneratedQuestion {
 }
 
 /**
+ * Questions déterministes de démonstration (mock local, sans IA), utilisées
+ * quand le binding Workers AI n'est pas disponible (m2 — dev local hors ligne).
+ */
+export function mockQuizQuestions(topic: string, count: number): GeneratedQuestion[] {
+  const n = Number.isInteger(count) && count > 0 ? Math.min(count, 10) : 3;
+  return Array.from({ length: n }, (_, i) => ({
+    prompt: `Question de démonstration ${i + 1} sur « ${topic} »`,
+    choices: ['Option A', 'Option B', 'Option C'],
+    correctIndex: i % 3,
+  }));
+}
+
+/**
  * Construit le prompt de génération d'un quiz (FR-31).
  */
 export function buildQuizPrompt(topic: string, count: number): string {
@@ -108,7 +124,7 @@ export function parseGeneratedQuiz(raw: string): GeneratedQuestion[] {
   const start = json.indexOf('[');
   const end = json.lastIndexOf(']');
   if (start === -1 || end === -1 || end <= start) {
-    throw new QuizError('Réponse JSON introuvable');
+    throw new QuizError(ErrorCodes.QUIZ_GENERATION_FAILED, 'Réponse JSON introuvable');
   }
   json = json.slice(start, end + 1);
 
@@ -116,15 +132,15 @@ export function parseGeneratedQuiz(raw: string): GeneratedQuestion[] {
   try {
     parsed = JSON.parse(json);
   } catch {
-    throw new QuizError('JSON invalide dans la réponse du modèle');
+    throw new QuizError(ErrorCodes.QUIZ_GENERATION_FAILED, 'JSON invalide dans la réponse du modèle');
   }
   if (!Array.isArray(parsed)) {
-    throw new QuizError('Format attendu : tableau JSON');
+    throw new QuizError(ErrorCodes.QUIZ_GENERATION_FAILED, 'Format attendu : tableau JSON');
   }
 
   const result = parsed.map((item, index) => {
     if (typeof item !== 'object' || item === null) {
-      throw new QuizError(`Question ${index + 1} invalide`);
+      throw new QuizError(ErrorCodes.QUESTION_INVALID, `Question ${index + 1} invalide`);
     }
     const o = item as Record<string, unknown>;
     const prompt = typeof o.prompt === 'string' ? o.prompt.trim() : '';
@@ -138,7 +154,7 @@ export function parseGeneratedQuiz(raw: string): GeneratedQuestion[] {
   });
 
   if (result.length === 0) {
-    throw new QuizError('Aucune question générée');
+    throw new QuizError(ErrorCodes.QUIZ_GENERATION_FAILED, 'Aucune question générée');
   }
   return result;
 }

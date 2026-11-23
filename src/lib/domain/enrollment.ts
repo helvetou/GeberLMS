@@ -1,5 +1,6 @@
 import { isSelfPayer, type User } from './user';
 import { tutorsOfLearner, type GuardianshipList } from './guardianship';
+import { ErrorCodes, type ErrorCode } from './errors';
 
 export type EnrollmentStatus = 'pending' | 'active' | 'expired' | 'revoked';
 
@@ -13,9 +14,11 @@ export interface Enrollment {
 }
 
 export class EnrollmentError extends Error {
-  constructor(message: string) {
+  code: ErrorCode;
+  constructor(code: ErrorCode, message: string) {
     super(message);
     this.name = 'EnrollmentError';
+    this.code = code;
   }
 }
 
@@ -30,6 +33,7 @@ export function validatePayer(opts: {
   if (isSelfPayer(learner)) {
     if (payerId !== learner.id) {
       throw new EnrollmentError(
+        ErrorCodes.SELF_PAYER_MUST_PAY_SELF,
         'Un apprenant auto-payeur doit se financer lui-même',
       );
     }
@@ -39,6 +43,7 @@ export function validatePayer(opts: {
   const tutors = tutorsOfLearner(guardianships, learner.id);
   if (!tutors.includes(payerId)) {
     throw new EnrollmentError(
+      ErrorCodes.PAYER_NOT_LINKED,
       'Le payeur n\u2019est pas un tuteur lié à cet apprenant',
     );
   }
@@ -78,7 +83,7 @@ export function enroll(
       e.courseId === enrollment.courseId,
   );
   if (dup) {
-    throw new EnrollmentError('Cet apprenant est déjà inscrit à ce cours');
+    throw new EnrollmentError(ErrorCodes.ALREADY_ENROLLED, 'Cet apprenant est déjà inscrit à ce cours');
   }
   return [...entries, enrollment];
 }
@@ -103,7 +108,7 @@ export function activateEnrollment(enrollment: Enrollment): Enrollment {
     return enrollment;
   }
   if (enrollment.status !== 'pending') {
-    throw new EnrollmentError('Inscription non activable');
+    throw new EnrollmentError(ErrorCodes.ENROLLMENT_NOT_ACTIVATABLE, 'Inscription non activable');
   }
   return { ...enrollment, status: 'active' };
 }
@@ -120,10 +125,10 @@ export function resolvePayer(
 
   const tutors = tutorsOfLearner(guardianships, learner.id);
   if (tutors.length === 0) {
-    throw new EnrollmentError('Aucun tuteur lié pour financer cet apprenant');
+    throw new EnrollmentError(ErrorCodes.NO_TUTOR_LINKED, 'Aucun tuteur lié pour financer cet apprenant');
   }
   if (tutors.length > 1) {
-    throw new EnrollmentError('Plusieurs tuteurs liés — payeur ambigu');
+    throw new EnrollmentError(ErrorCodes.PAYER_AMBIGUOUS, 'Plusieurs tuteurs liés — payeur ambigu');
   }
   return tutors[0]!;
 }

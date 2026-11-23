@@ -1,6 +1,6 @@
 <script lang="ts">
   import { useI18n } from '$lib/i18n.svelte';
-  const { t } = useI18n();
+  const { t, tError } = useI18n();
   import type { PageProps } from './$types';
   let { data, form }: PageProps = $props();
 
@@ -16,11 +16,11 @@
 <h1>{t('coupons.title')}</h1>
 
 {#if data.error}
-  <p role="alert">{data.error}</p>
+  <p role="alert">{tError(data.error)}</p>
 {/if}
 
 {#if form?.error}
-  <p role="alert">{form.error}</p>
+  <p role="alert">{tError(form.error)}</p>
 {/if}
 
 <h2>{t('coupons.new')}</h2>

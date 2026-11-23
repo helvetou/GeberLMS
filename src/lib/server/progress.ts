@@ -4,13 +4,18 @@ import { enrollments, lessons, modules, progress } from './db/schema';
 import {
   isProgressStatus,
   recordProgress,
+  ProgressError,
+  type ProgressEntry,
   type ProgressStatus,
 } from '$lib/domain/progress';
+import { ErrorCodes, type ErrorCode } from '$lib/domain/errors';
 
 export class ProgressServiceError extends Error {
-  constructor(message: string) {
+  code: ErrorCode;
+  constructor(code: ErrorCode, message: string) {
     super(message);
     this.name = 'ProgressServiceError';
+    this.code = code;
   }
 }
 
@@ -32,7 +37,7 @@ export async function recordLessonProgress(
   input: RecordLessonProgressInput,
 ): Promise<void> {
   if (!isProgressStatus(input.status)) {
-    throw new ProgressServiceError('Statut de progression invalide');
+    throw new ProgressServiceError(ErrorCodes.PROGRESS_STATUS_INVALID, 'Statut de progression invalide');
   }
 
   const enrollment = await db
@@ -41,13 +46,13 @@ export async function recordLessonProgress(
     .where(eq(enrollments.id, input.enrollmentId))
     .get();
   if (!enrollment) {
-    throw new ProgressServiceError('Inscription introuvable');
+    throw new ProgressServiceError(ErrorCodes.ENROLLMENT_NOT_FOUND, 'Inscription introuvable');
   }
   if (enrollment.learnerId !== input.learnerId) {
-    throw new ProgressServiceError('Cette inscription ne vous appartient pas');
+    throw new ProgressServiceError(ErrorCodes.ENROLLMENT_NOT_OWNED, 'Cette inscription ne vous appartient pas');
   }
   if (enrollment.status !== 'active') {
-    throw new ProgressServiceError('Inscription non active');
+    throw new ProgressServiceError(ErrorCodes.ENROLLMENT_NOT_ACTIVE, 'Inscription non active');
   }
 
   const lesson = await db
@@ -56,7 +61,7 @@ export async function recordLessonProgress(
     .where(eq(lessons.id, input.lessonId))
     .get();
   if (!lesson) {
-    throw new ProgressServiceError('Leçon introuvable');
+    throw new ProgressServiceError(ErrorCodes.LESSON_NOT_FOUND, 'Leçon introuvable');
   }
 
   const module = await db
@@ -65,19 +70,27 @@ export async function recordLessonProgress(
     .where(eq(modules.id, lesson.moduleId))
     .get();
   if (!module || module.courseId !== enrollment.courseId) {
-    throw new ProgressServiceError('Leçon hors du cours de cette inscription');
+    throw new ProgressServiceError(ErrorCodes.LESSON_OUT_OF_COURSE, 'Leçon hors du cours de cette inscription');
   }
 
   const score =
     input.score !== undefined && !Number.isNaN(input.score) ? input.score : undefined;
 
-  const entry = recordProgress({
-    id: crypto.randomUUID(),
-    enrollmentId: input.enrollmentId,
-    lessonId: input.lessonId,
-    status: input.status as ProgressStatus,
-    score,
-  });
+  let entry: ProgressEntry;
+  try {
+    entry = recordProgress({
+      id: crypto.randomUUID(),
+      enrollmentId: input.enrollmentId,
+      lessonId: input.lessonId,
+      status: input.status as ProgressStatus,
+      score,
+    });
+  } catch (err) {
+    if (err instanceof ProgressError) {
+      throw new ProgressServiceError(err.code, err.message);
+    }
+    throw err;
+  }
 
   // Une seule progression par (inscription, leçon) : on remplace l'existante.
   await db

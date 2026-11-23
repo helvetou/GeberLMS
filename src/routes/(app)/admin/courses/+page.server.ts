@@ -1,3 +1,4 @@
+import { ErrorCodes } from '$lib/domain/errors';
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { createDb, type DB } from '$lib/server/db';
@@ -32,7 +33,7 @@ export const load: PageServerLoad = async ({ locals, platform }) => {
   }
   const db = getDb(platform);
   if (!db) {
-    return { catalog: [], error: 'Base de données indisponible' };
+    return { catalog: [], error: ErrorCodes.DB_UNAVAILABLE };
   }
   return { catalog: await listAdminCatalog(db) };
 };
@@ -42,13 +43,13 @@ async function run(
   fn: (db: DB) => Promise<unknown>,
 ): Promise<{ ok: true } | { error: string }> {
   const db = getDb(platform);
-  if (!db) return { error: 'Base de données indisponible' };
+  if (!db) return { error: ErrorCodes.DB_UNAVAILABLE };
   try {
     await fn(db);
     return { ok: true };
   } catch (err) {
     if (err instanceof CatalogServiceError) {
-      return { error: err.message };
+      return { error: err.code };
     }
     throw err;
   }
@@ -56,7 +57,7 @@ async function run(
 
 export const actions: Actions = {
   createCourse: async ({ request, locals, platform }) => {
-    if (locals.user?.role !== 'admin') return fail(403, { error: 'Accès refusé' });
+    if (locals.user?.role !== 'admin') return fail(403, { error: ErrorCodes.ACCESS_DENIED });
     const data = await request.formData();
     const res = await run(platform, (db) =>
       createCourse(db, {
@@ -71,7 +72,7 @@ export const actions: Actions = {
   },
 
   renameCourse: async ({ request, locals, platform }) => {
-    if (locals.user?.role !== 'admin') return fail(403, { error: 'Accès refusé' });
+    if (locals.user?.role !== 'admin') return fail(403, { error: ErrorCodes.ACCESS_DENIED });
     const data = await request.formData();
     const res = await run(platform, (db) =>
       renameCourse(db, String(data.get('id') ?? ''), String(data.get('title') ?? '')),
@@ -81,7 +82,7 @@ export const actions: Actions = {
   },
 
   toggleCourse: async ({ request, locals, platform }) => {
-    if (locals.user?.role !== 'admin') return fail(403, { error: 'Accès refusé' });
+    if (locals.user?.role !== 'admin') return fail(403, { error: ErrorCodes.ACCESS_DENIED });
     const data = await request.formData();
     const res = await run(platform, (db) =>
       setCourseVisibility(db, String(data.get('id') ?? ''), String(data.get('visibility') ?? '')),
@@ -91,7 +92,7 @@ export const actions: Actions = {
   },
 
   deleteCourse: async ({ request, locals, platform }) => {
-    if (locals.user?.role !== 'admin') return fail(403, { error: 'Accès refusé' });
+    if (locals.user?.role !== 'admin') return fail(403, { error: ErrorCodes.ACCESS_DENIED });
     const data = await request.formData();
     const res = await run(platform, (db) => deleteCourse(db, String(data.get('id') ?? '')));
     if ('error' in res) return fail(400, res);
@@ -99,7 +100,7 @@ export const actions: Actions = {
   },
 
   createModule: async ({ request, locals, platform }) => {
-    if (locals.user?.role !== 'admin') return fail(403, { error: 'Accès refusé' });
+    if (locals.user?.role !== 'admin') return fail(403, { error: ErrorCodes.ACCESS_DENIED });
     const data = await request.formData();
     const res = await run(platform, (db) =>
       createModule(db, {
@@ -113,7 +114,7 @@ export const actions: Actions = {
   },
 
   renameModule: async ({ request, locals, platform }) => {
-    if (locals.user?.role !== 'admin') return fail(403, { error: 'Accès refusé' });
+    if (locals.user?.role !== 'admin') return fail(403, { error: ErrorCodes.ACCESS_DENIED });
     const data = await request.formData();
     const res = await run(platform, (db) =>
       renameModule(db, String(data.get('id') ?? ''), String(data.get('title') ?? '')),
@@ -123,7 +124,7 @@ export const actions: Actions = {
   },
 
   toggleModule: async ({ request, locals, platform }) => {
-    if (locals.user?.role !== 'admin') return fail(403, { error: 'Accès refusé' });
+    if (locals.user?.role !== 'admin') return fail(403, { error: ErrorCodes.ACCESS_DENIED });
     const data = await request.formData();
     const res = await run(platform, (db) =>
       setModuleVisibility(db, String(data.get('id') ?? ''), String(data.get('visibility') ?? '')),
@@ -133,7 +134,7 @@ export const actions: Actions = {
   },
 
   deleteModule: async ({ request, locals, platform }) => {
-    if (locals.user?.role !== 'admin') return fail(403, { error: 'Accès refusé' });
+    if (locals.user?.role !== 'admin') return fail(403, { error: ErrorCodes.ACCESS_DENIED });
     const data = await request.formData();
     const res = await run(platform, (db) => deleteModule(db, String(data.get('id') ?? '')));
     if ('error' in res) return fail(400, res);
@@ -141,7 +142,7 @@ export const actions: Actions = {
   },
 
   createLesson: async ({ request, locals, platform }) => {
-    if (locals.user?.role !== 'admin') return fail(403, { error: 'Accès refusé' });
+    if (locals.user?.role !== 'admin') return fail(403, { error: ErrorCodes.ACCESS_DENIED });
     const data = await request.formData();
     const res = await run(platform, (db) =>
       createLesson(db, {
@@ -156,7 +157,7 @@ export const actions: Actions = {
   },
 
   renameLesson: async ({ request, locals, platform }) => {
-    if (locals.user?.role !== 'admin') return fail(403, { error: 'Accès refusé' });
+    if (locals.user?.role !== 'admin') return fail(403, { error: ErrorCodes.ACCESS_DENIED });
     const data = await request.formData();
     const res = await run(platform, (db) =>
       renameLesson(db, String(data.get('id') ?? ''), String(data.get('title') ?? '')),
@@ -166,7 +167,7 @@ export const actions: Actions = {
   },
 
   toggleLesson: async ({ request, locals, platform }) => {
-    if (locals.user?.role !== 'admin') return fail(403, { error: 'Accès refusé' });
+    if (locals.user?.role !== 'admin') return fail(403, { error: ErrorCodes.ACCESS_DENIED });
     const data = await request.formData();
     const res = await run(platform, (db) =>
       setLessonVisibility(db, String(data.get('id') ?? ''), String(data.get('visibility') ?? '')),
@@ -176,7 +177,7 @@ export const actions: Actions = {
   },
 
   deleteLesson: async ({ request, locals, platform }) => {
-    if (locals.user?.role !== 'admin') return fail(403, { error: 'Accès refusé' });
+    if (locals.user?.role !== 'admin') return fail(403, { error: ErrorCodes.ACCESS_DENIED });
     const data = await request.formData();
     const res = await run(platform, (db) => deleteLesson(db, String(data.get('id') ?? '')));
     if ('error' in res) return fail(400, res);
@@ -184,7 +185,7 @@ export const actions: Actions = {
   },
 
   createResource: async ({ request, locals, platform }) => {
-    if (locals.user?.role !== 'admin') return fail(403, { error: 'Accès refusé' });
+    if (locals.user?.role !== 'admin') return fail(403, { error: ErrorCodes.ACCESS_DENIED });
     const data = await request.formData();
     const res = await run(platform, (db) =>
       createResource(db, {
@@ -197,7 +198,7 @@ export const actions: Actions = {
   },
 
   renameResource: async ({ request, locals, platform }) => {
-    if (locals.user?.role !== 'admin') return fail(403, { error: 'Accès refusé' });
+    if (locals.user?.role !== 'admin') return fail(403, { error: ErrorCodes.ACCESS_DENIED });
     const data = await request.formData();
     const res = await run(platform, (db) =>
       renameResource(db, String(data.get('id') ?? ''), String(data.get('title') ?? '')),
@@ -207,7 +208,7 @@ export const actions: Actions = {
   },
 
   toggleResource: async ({ request, locals, platform }) => {
-    if (locals.user?.role !== 'admin') return fail(403, { error: 'Accès refusé' });
+    if (locals.user?.role !== 'admin') return fail(403, { error: ErrorCodes.ACCESS_DENIED });
     const data = await request.formData();
     const res = await run(platform, (db) =>
       setResourceVisibility(db, String(data.get('id') ?? ''), String(data.get('visibility') ?? '')),
@@ -217,7 +218,7 @@ export const actions: Actions = {
   },
 
   deleteResource: async ({ request, locals, platform }) => {
-    if (locals.user?.role !== 'admin') return fail(403, { error: 'Accès refusé' });
+    if (locals.user?.role !== 'admin') return fail(403, { error: ErrorCodes.ACCESS_DENIED });
     const data = await request.formData();
     const res = await run(platform, (db) => deleteResource(db, String(data.get('id') ?? '')));
     if ('error' in res) return fail(400, res);

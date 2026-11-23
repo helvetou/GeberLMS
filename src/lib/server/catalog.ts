@@ -3,11 +3,14 @@ import type { DB } from './db';
 import { courses, modules, lessons, resources, enrollments, progress } from './db/schema';
 import { isContentType, isLanguage, isVisibility, type Visibility } from '$lib/domain/content';
 import { nestCatalog, publicCourses, type Course, type CourseNode } from '$lib/domain/catalog';
+import { ErrorCodes, type ErrorCode } from '$lib/domain/errors';
 
 export class CatalogServiceError extends Error {
-  constructor(message: string) {
+  code: ErrorCode;
+  constructor(code: ErrorCode, message: string) {
     super(message);
     this.name = 'CatalogServiceError';
+    this.code = code;
   }
 }
 
@@ -18,7 +21,8 @@ function now(): string {
 function assertNonEmpty(value: string, label: string): string {
   const v = value.trim();
   if (!v) {
-    throw new CatalogServiceError(`${label} requis`);
+    const code = label === 'Slug' ? ErrorCodes.SLUG_REQUIRED : ErrorCodes.TITLE_REQUIRED;
+    throw new CatalogServiceError(code, `${label} requis`);
   }
   return v;
 }
@@ -26,7 +30,7 @@ function assertNonEmpty(value: string, label: string): string {
 function parsePriceCents(raw: string): number {
   const n = Number(raw);
   if (!Number.isInteger(n) || n < 0) {
-    throw new CatalogServiceError('Prix invalide (entier positif en centimes)');
+    throw new CatalogServiceError(ErrorCodes.PRICE_INVALID, 'Prix invalide (entier positif en centimes)');
   }
   return n;
 }
@@ -35,7 +39,7 @@ function parsePosition(raw: string): number {
   if (!raw.trim()) return 0;
   const n = Number(raw);
   if (!Number.isInteger(n) || n < 0) {
-    throw new CatalogServiceError('Position invalide (entier ≥ 0)');
+    throw new CatalogServiceError(ErrorCodes.POSITION_INVALID, 'Position invalide (entier ≥ 0)');
   }
   return n;
 }
@@ -79,13 +83,13 @@ export async function createCourse(
   const title = assertNonEmpty(input.title, 'Titre');
   const slug = assertNonEmpty(input.slug, 'Slug');
   if (!isLanguage(input.language)) {
-    throw new CatalogServiceError('Langue invalide');
+    throw new CatalogServiceError(ErrorCodes.LANGUAGE_INVALID, 'Langue invalide');
   }
   const priceCents = parsePriceCents(input.priceCents);
 
   const existing = await db.select({ id: courses.id }).from(courses).where(eq(courses.slug, slug)).get();
   if (existing) {
-    throw new CatalogServiceError('Ce slug est déjà utilisé');
+    throw new CatalogServiceError(ErrorCodes.SLUG_TAKEN, 'Ce slug est déjà utilisé');
   }
 
   const id = crypto.randomUUID();
@@ -111,14 +115,14 @@ export async function createCourse(
 export async function renameCourse(db: DB, id: string, title: string): Promise<void> {
   const t = assertNonEmpty(title, 'Titre');
   const row = await db.select({ id: courses.id }).from(courses).where(eq(courses.id, id)).get();
-  if (!row) throw new CatalogServiceError('Cours introuvable');
+  if (!row) throw new CatalogServiceError(ErrorCodes.COURSE_NOT_FOUND, 'Cours introuvable');
   await db.update(courses).set({ title: t, updatedAt: now() }).where(eq(courses.id, id)).run();
 }
 
 export async function setCourseVisibility(db: DB, id: string, visibility: string): Promise<void> {
-  if (!isVisibility(visibility)) throw new CatalogServiceError('Visibilité invalide');
+  if (!isVisibility(visibility)) throw new CatalogServiceError(ErrorCodes.VISIBILITY_INVALID, 'Visibilité invalide');
   const row = await db.select({ id: courses.id }).from(courses).where(eq(courses.id, id)).get();
-  if (!row) throw new CatalogServiceError('Cours introuvable');
+  if (!row) throw new CatalogServiceError(ErrorCodes.COURSE_NOT_FOUND, 'Cours introuvable');
   await db
     .update(courses)
     .set({ visibility: visibility as Visibility, updatedAt: now() })
@@ -128,7 +132,7 @@ export async function setCourseVisibility(db: DB, id: string, visibility: string
 
 export async function setCoursePublic(db: DB, id: string, isPublic: boolean): Promise<void> {
   const row = await db.select({ id: courses.id }).from(courses).where(eq(courses.id, id)).get();
-  if (!row) throw new CatalogServiceError('Cours introuvable');
+  if (!row) throw new CatalogServiceError(ErrorCodes.COURSE_NOT_FOUND, 'Cours introuvable');
   await db
     .update(courses)
     .set({ isPublic, updatedAt: now() })
@@ -144,7 +148,7 @@ export async function listPublicCatalog(db: DB): Promise<Course[]> {
 
 export async function deleteCourse(db: DB, id: string): Promise<void> {
   const row = await db.select({ id: courses.id }).from(courses).where(eq(courses.id, id)).get();
-  if (!row) throw new CatalogServiceError('Cours introuvable');
+  if (!row) throw new CatalogServiceError(ErrorCodes.COURSE_NOT_FOUND, 'Cours introuvable');
 
   const linked = await db
     .select({ id: enrollments.id })
@@ -152,7 +156,7 @@ export async function deleteCourse(db: DB, id: string): Promise<void> {
     .where(eq(enrollments.courseId, id))
     .all();
   if (linked.length > 0) {
-    throw new CatalogServiceError('Cours avec inscriptions — suppression refusée');
+    throw new CatalogServiceError(ErrorCodes.COURSE_HAS_ENROLLMENTS, 'Cours avec inscriptions — suppression refusée');
   }
 
   const moduleRows = await db
@@ -184,7 +188,7 @@ export async function createModule(
 ): Promise<string> {
   const title = assertNonEmpty(input.title, 'Titre');
   const course = await db.select({ id: courses.id }).from(courses).where(eq(courses.id, input.courseId)).get();
-  if (!course) throw new CatalogServiceError('Cours parent introuvable');
+  if (!course) throw new CatalogServiceError(ErrorCodes.COURSE_NOT_FOUND, 'Cours parent introuvable');
 
   const id = crypto.randomUUID();
   await db.insert(modules).values({
@@ -200,20 +204,20 @@ export async function createModule(
 export async function renameModule(db: DB, id: string, title: string): Promise<void> {
   const t = assertNonEmpty(title, 'Titre');
   const row = await db.select({ id: modules.id }).from(modules).where(eq(modules.id, id)).get();
-  if (!row) throw new CatalogServiceError('Module introuvable');
+  if (!row) throw new CatalogServiceError(ErrorCodes.MODULE_NOT_FOUND, 'Module introuvable');
   await db.update(modules).set({ title: t }).where(eq(modules.id, id)).run();
 }
 
 export async function setModuleVisibility(db: DB, id: string, visibility: string): Promise<void> {
-  if (!isVisibility(visibility)) throw new CatalogServiceError('Visibilité invalide');
+  if (!isVisibility(visibility)) throw new CatalogServiceError(ErrorCodes.VISIBILITY_INVALID, 'Visibilité invalide');
   const row = await db.select({ id: modules.id }).from(modules).where(eq(modules.id, id)).get();
-  if (!row) throw new CatalogServiceError('Module introuvable');
+  if (!row) throw new CatalogServiceError(ErrorCodes.MODULE_NOT_FOUND, 'Module introuvable');
   await db.update(modules).set({ visibility: visibility as Visibility }).where(eq(modules.id, id)).run();
 }
 
 export async function deleteModule(db: DB, id: string): Promise<void> {
   const row = await db.select({ id: modules.id }).from(modules).where(eq(modules.id, id)).get();
-  if (!row) throw new CatalogServiceError('Module introuvable');
+  if (!row) throw new CatalogServiceError(ErrorCodes.MODULE_NOT_FOUND, 'Module introuvable');
 
   const lessonRows = await db.select({ id: lessons.id }).from(lessons).where(eq(lessons.moduleId, id)).all();
   const lessonIds = lessonRows.map((l) => l.id);
@@ -232,9 +236,9 @@ export async function createLesson(
   input: { moduleId: string; title: string; type: string; position: string },
 ): Promise<string> {
   const title = assertNonEmpty(input.title, 'Titre');
-  if (!isContentType(input.type)) throw new CatalogServiceError('Type de leçon invalide');
+  if (!isContentType(input.type)) throw new CatalogServiceError(ErrorCodes.LESSON_TYPE_INVALID, 'Type de leçon invalide');
   const module = await db.select({ id: modules.id }).from(modules).where(eq(modules.id, input.moduleId)).get();
-  if (!module) throw new CatalogServiceError('Module parent introuvable');
+  if (!module) throw new CatalogServiceError(ErrorCodes.MODULE_NOT_FOUND, 'Module parent introuvable');
 
   const id = crypto.randomUUID();
   await db.insert(lessons).values({
@@ -251,20 +255,20 @@ export async function createLesson(
 export async function renameLesson(db: DB, id: string, title: string): Promise<void> {
   const t = assertNonEmpty(title, 'Titre');
   const row = await db.select({ id: lessons.id }).from(lessons).where(eq(lessons.id, id)).get();
-  if (!row) throw new CatalogServiceError('Leçon introuvable');
+  if (!row) throw new CatalogServiceError(ErrorCodes.LESSON_NOT_FOUND, 'Leçon introuvable');
   await db.update(lessons).set({ title: t }).where(eq(lessons.id, id)).run();
 }
 
 export async function setLessonVisibility(db: DB, id: string, visibility: string): Promise<void> {
-  if (!isVisibility(visibility)) throw new CatalogServiceError('Visibilité invalide');
+  if (!isVisibility(visibility)) throw new CatalogServiceError(ErrorCodes.VISIBILITY_INVALID, 'Visibilité invalide');
   const row = await db.select({ id: lessons.id }).from(lessons).where(eq(lessons.id, id)).get();
-  if (!row) throw new CatalogServiceError('Leçon introuvable');
+  if (!row) throw new CatalogServiceError(ErrorCodes.LESSON_NOT_FOUND, 'Leçon introuvable');
   await db.update(lessons).set({ visibility: visibility as Visibility }).where(eq(lessons.id, id)).run();
 }
 
 export async function deleteLesson(db: DB, id: string): Promise<void> {
   const row = await db.select({ id: lessons.id }).from(lessons).where(eq(lessons.id, id)).get();
-  if (!row) throw new CatalogServiceError('Leçon introuvable');
+  if (!row) throw new CatalogServiceError(ErrorCodes.LESSON_NOT_FOUND, 'Leçon introuvable');
 
   await db.delete(resources).where(eq(resources.lessonId, id)).run();
   await db.delete(progress).where(eq(progress.lessonId, id)).run();
@@ -279,7 +283,7 @@ export async function createResource(
 ): Promise<string> {
   const title = assertNonEmpty(input.title, 'Titre');
   const lesson = await db.select({ id: lessons.id }).from(lessons).where(eq(lessons.id, input.lessonId)).get();
-  if (!lesson) throw new CatalogServiceError('Leçon parente introuvable');
+  if (!lesson) throw new CatalogServiceError(ErrorCodes.LESSON_NOT_FOUND, 'Leçon parente introuvable');
 
   const id = crypto.randomUUID();
   await db.insert(resources).values({
@@ -294,19 +298,19 @@ export async function createResource(
 export async function renameResource(db: DB, id: string, title: string): Promise<void> {
   const t = assertNonEmpty(title, 'Titre');
   const row = await db.select({ id: resources.id }).from(resources).where(eq(resources.id, id)).get();
-  if (!row) throw new CatalogServiceError('Ressource introuvable');
+  if (!row) throw new CatalogServiceError(ErrorCodes.RESOURCE_NOT_FOUND, 'Ressource introuvable');
   await db.update(resources).set({ title: t }).where(eq(resources.id, id)).run();
 }
 
 export async function setResourceVisibility(db: DB, id: string, visibility: string): Promise<void> {
-  if (!isVisibility(visibility)) throw new CatalogServiceError('Visibilité invalide');
+  if (!isVisibility(visibility)) throw new CatalogServiceError(ErrorCodes.VISIBILITY_INVALID, 'Visibilité invalide');
   const row = await db.select({ id: resources.id }).from(resources).where(eq(resources.id, id)).get();
-  if (!row) throw new CatalogServiceError('Ressource introuvable');
+  if (!row) throw new CatalogServiceError(ErrorCodes.RESOURCE_NOT_FOUND, 'Ressource introuvable');
   await db.update(resources).set({ visibility: visibility as Visibility }).where(eq(resources.id, id)).run();
 }
 
 export async function deleteResource(db: DB, id: string): Promise<void> {
   const row = await db.select({ id: resources.id }).from(resources).where(eq(resources.id, id)).get();
-  if (!row) throw new CatalogServiceError('Ressource introuvable');
+  if (!row) throw new CatalogServiceError(ErrorCodes.RESOURCE_NOT_FOUND, 'Ressource introuvable');
   await db.delete(resources).where(eq(resources.id, id)).run();
 }

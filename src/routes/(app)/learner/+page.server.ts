@@ -1,3 +1,4 @@
+import { ErrorCodes } from '$lib/domain/errors';
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 import { createDb } from '$lib/server/db';
@@ -19,7 +20,7 @@ export const load: PageServerLoad = async ({ locals, platform }) => {
 
   const dbBinding = platform?.env?.DB;
   if (!dbBinding) {
-    return { view: null, quizzes: {}, error: 'Base de données indisponible' };
+    return { view: null, quizzes: {}, error: ErrorCodes.DB_UNAVAILABLE };
   }
 
   const db = createDb(dbBinding);
@@ -45,19 +46,19 @@ export const load: PageServerLoad = async ({ locals, platform }) => {
 export const actions: Actions = {
   complete: async ({ request, locals, platform }) => {
     if (!locals.user || locals.user.role !== 'learner') {
-      return fail(403, { error: 'Accès refusé' });
+      return fail(403, { error: ErrorCodes.ACCESS_DENIED });
     }
 
     const dbBinding = platform?.env?.DB;
     if (!dbBinding) {
-      return fail(503, { error: 'Base de données indisponible' });
+      return fail(503, { error: ErrorCodes.DB_UNAVAILABLE });
     }
 
     const data = await request.formData();
     const enrollmentId = String(data.get('enrollmentId') ?? '').trim();
     const lessonId = String(data.get('lessonId') ?? '').trim();
     if (!enrollmentId || !lessonId) {
-      return fail(400, { error: 'Paramètres requis' });
+      return fail(400, { error: ErrorCodes.PARAMS_REQUIRED });
     }
 
     const db = createDb(dbBinding);
@@ -77,7 +78,7 @@ export const actions: Actions = {
       return { ok: true };
     } catch (err) {
       if (err instanceof ProgressServiceError) {
-        return fail(400, { error: err.message });
+        return fail(400, { error: err.code });
       }
       throw err;
     }
@@ -85,19 +86,19 @@ export const actions: Actions = {
 
   submitQuiz: async ({ request, locals, platform }) => {
     if (!locals.user || locals.user.role !== 'learner') {
-      return fail(403, { error: 'Accès refusé' });
+      return fail(403, { error: ErrorCodes.ACCESS_DENIED });
     }
 
     const dbBinding = platform?.env?.DB;
     if (!dbBinding) {
-      return fail(503, { error: 'Base de données indisponible' });
+      return fail(503, { error: ErrorCodes.DB_UNAVAILABLE });
     }
 
     const data = await request.formData();
     const enrollmentId = String(data.get('enrollmentId') ?? '').trim();
     const lessonId = String(data.get('lessonId') ?? '').trim();
     if (!enrollmentId || !lessonId) {
-      return fail(400, { error: 'Paramètres requis' });
+      return fail(400, { error: ErrorCodes.PARAMS_REQUIRED });
     }
 
     const answers: AnswerSelection[] = [];
@@ -123,8 +124,8 @@ export const actions: Actions = {
       });
       return { ok: true, quizResult };
     } catch (err) {
-      if (err instanceof QuizServiceError) {
-        return fail(400, { error: err.message });
+      if (err instanceof QuizServiceError || err instanceof ProgressServiceError) {
+        return fail(400, { error: err.code });
       }
       throw err;
     }
@@ -132,19 +133,19 @@ export const actions: Actions = {
 
   upload: async ({ request, locals, platform }) => {
     if (!locals.user || locals.user.role !== 'learner') {
-      return fail(403, { error: 'Accès refusé' });
+      return fail(403, { error: ErrorCodes.ACCESS_DENIED });
     }
 
     const dbBinding = platform?.env?.DB;
     const r2 = platform?.env?.FILES;
     if (!dbBinding || !r2) {
-      return fail(503, { error: 'Stockage indisponible' });
+      return fail(503, { error: ErrorCodes.STORAGE_UNAVAILABLE });
     }
 
     const data = await request.formData();
     const file = data.get('file');
     if (!(file instanceof File) || file.size === 0) {
-      return fail(400, { error: 'Fichier requis' });
+      return fail(400, { error: ErrorCodes.FILE_REQUIRED });
     }
     const lessonId = String(data.get('lessonId') ?? '').trim() || undefined;
 
@@ -165,7 +166,7 @@ export const actions: Actions = {
       return { ok: true, uploaded: true };
     } catch (err) {
       if (err instanceof UploadServiceError) {
-        return fail(400, { error: err.message });
+        return fail(400, { error: err.code });
       }
       throw err;
     }

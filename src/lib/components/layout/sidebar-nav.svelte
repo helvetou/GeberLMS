@@ -12,6 +12,7 @@
 	import CreditCardIcon from '@lucide/svelte/icons/credit-card';
 	import TicketIcon from '@lucide/svelte/icons/ticket';
 	import ListChecksIcon from '@lucide/svelte/icons/list-checks';
+	import BookOpenIcon from '@lucide/svelte/icons/book-open';
 
 	const { t } = useI18n();
 
@@ -29,6 +30,7 @@
 					{ href: '/admin/payments', label: t('payments.title'), icon: CreditCardIcon },
 					{ href: '/admin/coupons', label: t('coupons.title'), icon: TicketIcon },
 					{ href: '/admin/quizzes', label: t('quizzes.title'), icon: ListChecksIcon },
+					{ href: '/admin/quran', label: t('quran.title'), icon: BookOpenIcon },
 				]
 			: role === 'tutor'
 				? [{ href: '/tutor', label: t('tutor.title'), icon: LayoutDashboardIcon }]

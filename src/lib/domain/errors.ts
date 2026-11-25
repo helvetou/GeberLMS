@@ -47,6 +47,7 @@ export const ErrorCodes = {
   // Inscriptions
   LEARNER_NOT_FOUND: 'errors.learner_not_found',
   TUTOR_NOT_FOUND: 'errors.tutor_not_found',
+  SURAH_NOT_FOUND: 'errors.surah_not_found',
   ALREADY_ENROLLED: 'errors.already_enrolled',
   PAYER_NOT_LINKED: 'errors.payer_not_linked',
   PAYER_AMBIGUOUS: 'errors.payer_ambiguous',

@@ -1,0 +1,37 @@
+{
+  "title": "القرآن الكريم — رواية ورش",
+  "slug": "quran-warsh",
+  "language": "ar",
+  "description": "مصحف كامل برواية ورش (604 صفحة) مع تفسير بعض السور، قابل للتعديل.",
+  "thumbnail_key": "courses/quran-warsh/thumb.webp",
+  "category": "quran",
+  "level": "debutant",
+  "is_public": true,
+  "price_cents": 0,
+  "modules": [
+    {
+      "key": "mushaf",
+      "title": "المصحف (رواية ورش)",
+      "lessons": [
+        {
+          "key": "mushaf-viewer",
+          "title": "قراءة المصحف",
+          "type": "text",
+          "content_markdown": "# المصحف — رواية ورش\n\nالمصحف كاملاً (604 صفحة) برواية ورش.\n\n[افتح المصحف](/quran/)"
+        }
+      ]
+    },
+    {
+      "key": "tafseer",
+      "title": "التفسير",
+      "lessons": [
+        {
+          "key": "tafseer-list",
+          "title": "تفسير السور",
+          "type": "text",
+          "content_markdown": "# التفسير\n\nتفسير بعض السور مع صفحات المصحف التي تحتوي كل سورة.\n\n[تصفح التفسير](/quran/tafseer)"
+        }
+      ]
+    }
+  ]
+}

@@ -188,6 +188,15 @@ export const llmUsage = sqliteTable('llm_usage', {
   createdAt: text('created_at').notNull(),
 });
 
+export const quranSurahs = sqliteTable('quran_surahs', {
+  surahNo: integer('surah_no').primaryKey(),
+  nameAr: text('name_ar').notNull(),
+  nameEn: text('name_en').notNull(),
+  startPage: integer('start_page').notNull(),
+  endPage: integer('end_page').notNull(),
+  tafseerR2Key: text('tafseer_r2_key'),
+});
+
 export const payments = sqliteTable('payments', {
   id: text('id').primaryKey(),
   enrollmentId: text('enrollment_id').references(() => enrollments.id),

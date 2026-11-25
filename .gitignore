@@ -40,3 +40,6 @@ PayoneerToRevolutHelveticore.png
 
 # Clés SSH locales — à ne jamais publier
 .ssh/
+
+# Données brutes d'entrée (cours/drone) — hors du dépôt
+/input/

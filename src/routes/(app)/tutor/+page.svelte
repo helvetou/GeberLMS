@@ -3,6 +3,10 @@
   const { t, tStatus, tError } = useI18n();
   import * as Card from '$lib/components/ui/card/index.js';
   import { Badge } from '$lib/components/ui/badge/index.js';
+  import { Progress } from '$lib/components/ui/progress/index.js';
+  import PageHeader from '$lib/components/page-header.svelte';
+  import EmptyState from '$lib/components/empty-state.svelte';
+  import UsersIcon from '@lucide/svelte/icons/users';
   import type { PageProps } from './$types';
   let { data }: PageProps = $props();
 
@@ -39,7 +43,9 @@
   </div>
 
   {#if data.view.learners.length === 0}
-    <p class="mt-4 text-muted-foreground">{t('tutor.noLearners')}</p>
+    <div class="mt-6">
+      <EmptyState icon={UsersIcon} title={t('tutor.noLearners')} />
+    </div>
   {:else}
     <ul class="mt-6 space-y-4">
       {#each data.view.learners as learner (learner.learnerId)}
@@ -55,10 +61,8 @@
                     <span>{c.title}</span>
                     <Badge variant="outline">{tStatus(c.status)}</Badge>
                   </div>
-                  <div class="mt-1 h-2 w-full overflow-hidden rounded-full bg-muted">
-                    <div class="h-full rounded-full bg-primary" style={`width: ${pct(c.completedLessons, c.totalLessons)}%`}></div>
-                  </div>
-                  <p class="mt-0.5 text-xs text-muted-foreground">
+                  <Progress value={pct(c.completedLessons, c.totalLessons)} class="mt-2" />
+                  <p class="mt-1 text-xs text-muted-foreground">
                     {c.completedLessons}/{c.totalLessons} {t('common.lessons')}
                   </p>
                 </li>

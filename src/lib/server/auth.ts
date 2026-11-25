@@ -45,6 +45,15 @@ export async function listTutors(db: DB) {
     .all();
 }
 
+/** Apprenants existants (pour la tutelle, m11). */
+export async function listLearners(db: DB) {
+  return db
+    .select({ id: users.id, email: users.email, name: users.name })
+    .from(users)
+    .where(eq(users.role, 'learner'))
+    .all();
+}
+
 export async function verifyLogin(
   db: DB,
   email: string,

@@ -8,6 +8,7 @@
 	import LibraryIcon from '@lucide/svelte/icons/library';
 	import UsersIcon from '@lucide/svelte/icons/users';
 	import UserPlusIcon from '@lucide/svelte/icons/user-plus';
+	import LinkIcon from '@lucide/svelte/icons/link';
 	import CreditCardIcon from '@lucide/svelte/icons/credit-card';
 	import TicketIcon from '@lucide/svelte/icons/ticket';
 	import ListChecksIcon from '@lucide/svelte/icons/list-checks';
@@ -23,6 +24,7 @@
 			? [
 					{ href: '/admin/courses', label: t('courses.title'), icon: LibraryIcon },
 					{ href: '/admin/users', label: t('users.title'), icon: UsersIcon },
+					{ href: '/admin/guardianships', label: t('guardianships.title'), icon: LinkIcon },
 					{ href: '/admin/enroll', label: t('enroll.title'), icon: UserPlusIcon },
 					{ href: '/admin/payments', label: t('payments.title'), icon: CreditCardIcon },
 					{ href: '/admin/coupons', label: t('coupons.title'), icon: TicketIcon },

@@ -19,6 +19,8 @@
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "db:migrate": "tsx scripts/migrate.ts",
     "db:migrate:remote": "tsx scripts/migrate.ts --remote",
+    "db:reset-password": "tsx scripts/reset-password.ts",
+    "db:reset-password:remote": "tsx scripts/reset-password.ts --remote",
     "smoke": "tsx scripts/smoke-production.ts",
     "test:e2e": "playwright test"
   },

@@ -1,73 +1,81 @@
 <script lang="ts">
   import { useI18n } from '$lib/i18n.svelte';
   const { t, tStatus, tError } = useI18n();
+  import { toast } from 'svelte-sonner';
+  import PageHeader from '$lib/components/page-header.svelte';
+  import DataTable from '$lib/components/data-table.svelte';
+  import { Button } from '$lib/components/ui/button/index.js';
   import type { PageProps } from './$types';
   let { data, form }: PageProps = $props();
+
+  const enrollmentColumns = [
+    { key: 'learnerName', header: t('users.learner') },
+    { key: 'courseTitle', header: t('enroll.course') },
+    { key: 'totalCents', header: t('payments.total'), class: 'text-right', format: (r: any) => `€${(r.totalCents / 100).toFixed(2)}` },
+    { key: 'status', header: t('payments.title'), format: (r: any) => tStatus(r.status) },
+  ];
+
+  const invoiceColumns = [
+    { key: 'number', header: t('payments.invoice') },
+    { key: 'learnerEmail', header: t('common.email') },
+    { key: 'courseTitle', header: t('enroll.course') },
+    { key: 'totalCents', header: t('payments.total'), class: 'text-right', format: (r: any) => `€${(r.totalCents / 100).toFixed(2)}` },
+    { key: 'createdAt', header: t('payments.date') },
+  ];
+
+  $effect(() => {
+    if (form?.error) toast.error(tError(form.error));
+  });
+  $effect(() => {
+    if (form?.ok && form.invoiceNumber) {
+      toast.success(t('payments.confirmed', { number: form.invoiceNumber }));
+    }
+  });
 </script>
 
 <svelte:head>
   <title>{t('payments.title')} — GeberLMS</title>
 </svelte:head>
 
-<h1>{t('payments.title')}</h1>
+<PageHeader title={t('payments.title')} />
 
-{#if data.error}
-  <p role="alert">{tError(data.error)}</p>
-{/if}
+<div class="mt-6 space-y-8">
+  <section>
+    <h2 class="font-display text-lg font-semibold">{t('payments.title')}</h2>
+    <div class="mt-3">
+      <DataTable
+        data={data.enrollments}
+        columns={enrollmentColumns}
+        rowKey="enrollmentId"
+        empty={t('payments.none')}
+        searchable
+        searchKeys={['learnerName', 'courseTitle']}
+        searchPlaceholder={t('catalog.search')}
+      >
+        {#snippet actions(row)}
+          {#if row.status === 'pending'}
+            <form method="POST" action="?/markPaid">
+              <input type="hidden" name="enrollmentId" value={row.enrollmentId} />
+              <Button type="submit" size="sm">{t('payments.markPaid')}</Button>
+            </form>
+          {/if}
+        {/snippet}
+      </DataTable>
+    </div>
+  </section>
 
-{#if form?.error}
-  <p role="alert">{tError(form.error)}</p>
-{/if}
-
-{#if form?.ok && form.invoiceNumber}
-  <p role="status">{t('payments.confirmed', { number: form.invoiceNumber })}</p>
-{/if}
-
-{#if data.enrollments.length === 0}
-  <p>{t('payments.none')}</p>
-{:else}
-  <ul>
-    {#each data.enrollments as e (e.enrollmentId)}
-      <li>
-        <strong>{e.learnerName}</strong> ({e.learnerEmail})
-        — {e.courseTitle}
-        — {e.totalCents / 100} €
-        — <em>{tStatus(e.status)}</em>
-        {#if e.status === 'pending'}
-          <form method="POST" action="?/markPaid" style="display: inline">
-            <input type="hidden" name="enrollmentId" value={e.enrollmentId} />
-            <button type="submit">{t('payments.markPaid')}</button>
-          </form>
-        {/if}
-      </li>
-    {/each}
-  </ul>
-{/if}
-
-<h2 class="mt-6 text-lg font-semibold">{t('payments.invoices')}</h2>
-{#if (data.invoices ?? []).length === 0}
-  <p class="text-muted-foreground">{t('payments.none')}</p>
-{:else}
-  <table class="mt-2 w-full text-sm">
-    <thead>
-      <tr class="text-left text-muted-foreground">
-        <th class="py-1 pr-2">{t('payments.invoice')}</th>
-        <th class="py-1 pr-2">{t('common.email')}</th>
-        <th class="py-1 pr-2">{t('common.title')}</th>
-        <th class="py-1 pr-2">{t('payments.total')}</th>
-        <th class="py-1">{t('payments.date')}</th>
-      </tr>
-    </thead>
-    <tbody>
-      {#each data.invoices as inv (inv.id)}
-        <tr class="border-t">
-          <td class="py-1 pr-2 font-mono">{inv.number}</td>
-          <td class="py-1 pr-2">{inv.learnerEmail}</td>
-          <td class="py-1 pr-2">{inv.courseTitle}</td>
-          <td class="py-1 pr-2">€{(inv.totalCents / 100).toFixed(2)} <span class="text-xs text-muted-foreground">(TVA {inv.vatRatePercent} %)</span></td>
-          <td class="py-1">{inv.createdAt}</td>
-        </tr>
-      {/each}
-    </tbody>
-  </table>
-{/if}
+  <section>
+    <h2 class="font-display text-lg font-semibold">{t('payments.invoices')}</h2>
+    <div class="mt-3">
+      <DataTable
+        data={data.invoices}
+        columns={invoiceColumns}
+        rowKey="number"
+        empty={t('payments.none')}
+        searchable
+        searchKeys={['number', 'learnerEmail', 'courseTitle']}
+        searchPlaceholder={t('catalog.search')}
+      />
+    </div>
+  </section>
+</div>

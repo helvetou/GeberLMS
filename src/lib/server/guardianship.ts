@@ -13,6 +13,7 @@ export class GuardianshipServiceError extends Error {
 }
 
 export interface GuardianshipRow {
+  id: string;
   tutorId: string;
   tutorName: string;
   tutorEmail: string;
@@ -33,6 +34,7 @@ export async function listGuardianships(db: DB): Promise<GuardianshipRow[]> {
     const tutor = byId.get(l.tutorId);
     const learner = byId.get(l.learnerId);
     return {
+      id: `${l.tutorId}:${l.learnerId}`,
       tutorId: l.tutorId,
       tutorName: tutor?.name ?? tutor?.email ?? l.tutorId,
       tutorEmail: tutor?.email ?? l.tutorId,

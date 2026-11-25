@@ -1,6 +1,7 @@
 <script lang="ts">
   import { useI18n } from '$lib/i18n.svelte';
   const { t, tStatus, tError } = useI18n();
+  import { toast } from 'svelte-sonner';
   import PageHeader from '$lib/components/page-header.svelte';
   import StatCard from '$lib/components/stat-card.svelte';
   import * as Card from '$lib/components/ui/card/index.js';
@@ -49,6 +50,13 @@
     'upload.create': UploadIcon,
     'enrollment.create': UserPlusIcon,
   };
+
+  $effect(() => {
+    if (form?.error) toast.error(tError(form.error));
+  });
+  $effect(() => {
+    if (form?.ok && form.uploaded) toast.success(t('learner.uploaded'));
+  });
 </script>
 
 <svelte:head>
@@ -185,11 +193,4 @@
   </Card.Root>
 {:else}
   <p role="alert">{tError(data.error)}</p>
-{/if}
-
-{#if form?.error}
-  <p role="alert">{tError(form.error)}</p>
-{/if}
-{#if form?.ok && form.uploaded}
-  <p role="status">{t('learner.uploaded')}</p>
 {/if}

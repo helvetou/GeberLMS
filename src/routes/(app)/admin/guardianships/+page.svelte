@@ -1,16 +1,30 @@
 <script lang="ts">
   import { useI18n } from '$lib/i18n.svelte';
   const { t, tError } = useI18n();
+  import { toast } from 'svelte-sonner';
   import PageHeader from '$lib/components/page-header.svelte';
-  import EmptyState from '$lib/components/empty-state.svelte';
+  import DataTable from '$lib/components/data-table.svelte';
   import * as Card from '$lib/components/ui/card/index.js';
   import { Button } from '$lib/components/ui/button/index.js';
   import { Label } from '$lib/components/ui/label/index.js';
   import LinkIcon from '@lucide/svelte/icons/link';
   import UnlinkIcon from '@lucide/svelte/icons/unlink';
-  import UsersRoundIcon from '@lucide/svelte/icons/users-round';
   import type { PageProps } from './$types';
   let { data, form }: PageProps = $props();
+
+  const columns = [
+    { key: 'tutorName', header: t('guardianships.tutor') },
+    { key: 'learnerName', header: t('guardianships.learner') },
+    {
+      key: 'tutorEmail',
+      header: t('common.email'),
+      format: (r: any) => `${r.tutorEmail} → ${r.learnerEmail}`,
+    },
+  ];
+
+  $effect(() => {
+    if (form?.error) toast.error(tError(form.error));
+  });
 </script>
 
 <svelte:head>
@@ -58,26 +72,24 @@
 </Card.Root>
 
 <h2 class="mt-6 font-display text-lg font-semibold">{t('guardianships.existing')}</h2>
-{#if data.guardianships.length === 0}
-  <div class="mt-4">
-    <EmptyState icon={UsersRoundIcon} title={t('guardianships.none')} />
-  </div>
-{:else}
-  <ul class="mt-4 space-y-2">
-    {#each data.guardianships as g (`${g.tutorId}:${g.learnerId}`)}
-      <li class="flex flex-wrap items-center gap-3 rounded-lg border bg-background p-3">
-        <div class="min-w-0 flex-1">
-          <p class="font-medium">{g.tutorName} <span class="text-muted-foreground">↔</span> {g.learnerName}</p>
-          <p class="truncate text-xs text-muted-foreground">{g.tutorEmail} → {g.learnerEmail}</p>
-        </div>
-        <form method="POST" action="?/unlink">
-          <input type="hidden" name="tutorId" value={g.tutorId} />
-          <input type="hidden" name="learnerId" value={g.learnerId} />
-          <Button type="submit" variant="outline" size="sm">
-            <UnlinkIcon class="size-4" /> {t('guardianships.unlink')}
-          </Button>
-        </form>
-      </li>
-    {/each}
-  </ul>
-{/if}
+<div class="mt-3">
+  <DataTable
+    data={data.guardianships}
+    {columns}
+    rowKey="id"
+    empty={t('guardianships.none')}
+    searchable
+    searchKeys={['tutorName', 'learnerName', 'tutorEmail', 'learnerEmail']}
+    searchPlaceholder={t('catalog.search')}
+  >
+    {#snippet actions(row)}
+      <form method="POST" action="?/unlink">
+        <input type="hidden" name="tutorId" value={row.tutorId} />
+        <input type="hidden" name="learnerId" value={row.learnerId} />
+        <Button type="submit" variant="outline" size="sm">
+          <UnlinkIcon class="size-4" /> {t('guardianships.unlink')}
+        </Button>
+      </form>
+    {/snippet}
+  </DataTable>
+</div>

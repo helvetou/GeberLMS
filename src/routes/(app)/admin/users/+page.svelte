@@ -1,8 +1,16 @@
 <script lang="ts">
   import { useI18n } from '$lib/i18n.svelte';
   const { t, tError } = useI18n();
+  import { toast } from 'svelte-sonner';
   import type { PageProps } from './$types';
   let { form }: PageProps = $props();
+
+  $effect(() => {
+    if (form?.error) toast.error(tError(form.error));
+  });
+  $effect(() => {
+    if (form?.ok) toast.success(t('users.created'));
+  });
 </script>
 
 <svelte:head>
@@ -28,11 +36,3 @@
   <label>{t('common.password')} <input type="password" name="password" autocomplete="new-password" /></label>
   <button type="submit">{t('common.create')}</button>
 </form>
-
-{#if form?.error}
-  <p role="alert">{tError(form.error)}</p>
-{/if}
-
-{#if form?.ok}
-  <p role="status">{t('users.created')}</p>
-{/if}

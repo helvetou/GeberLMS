@@ -91,6 +91,40 @@
                       {/if}
                       <span class="ml-auto text-xs uppercase text-muted-foreground">{lesson.type}</span>
                     </div>
+
+                    {#if lesson.type === 'text'}
+                      {#if data.rendered[lesson.id]}
+                        <div class="prose prose-sm mt-3 max-w-none">{@html data.rendered[lesson.id]}</div>
+                      {:else}
+                        <p class="mt-2 text-sm text-muted-foreground">{t('reader.noContent')}</p>
+                      {/if}
+                    {:else if lesson.type === 'video'}
+                      {#if lesson.contentRef}
+                        <video controls class="mt-3 w-full rounded-md border" preload="metadata">
+                          <source src={lesson.contentRef} />
+                        </video>
+                      {:else}
+                        <p class="mt-2 text-sm text-muted-foreground">{t('reader.noContent')}</p>
+                      {/if}
+                    {:else if lesson.type === 'quiz'}
+                      {#if (data.quizzes[lesson.id] ?? []).length > 0}
+                        <div class="mt-3 space-y-3">
+                          {#each data.quizzes[lesson.id] as q (q.id)}
+                            <div class="rounded-md border p-3">
+                              <p class="text-sm font-medium">{q.prompt}</p>
+                              <ul class="mt-1 space-y-1 pl-4 text-sm text-muted-foreground">
+                                {#each q.choices as choice, i (i)}
+                                  <li>{choice}</li>
+                                {/each}
+                              </ul>
+                            </div>
+                          {/each}
+                        </div>
+                      {:else}
+                        <em class="mt-2 text-sm text-muted-foreground">{t('learner.emptyQuiz')}</em>
+                      {/if}
+                    {/if}
+
                     {#if row.resources.length > 0}
                       <ul class="mt-2 space-y-1 pl-8 text-sm text-muted-foreground">
                         {#each row.resources as r (r.id)}

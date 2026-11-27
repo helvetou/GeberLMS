@@ -138,102 +138,9 @@ function escapeHtml(s) {
     .replaceAll("'", "&#39;");
 }
 
-function escapeRegExp(s) {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-function parsePageSpec(spec) {
-  const s = String(spec == null ? "" : spec).trim();
-  if (!s) return null;
-  const dash = s.indexOf("-");
-  if (dash === -1) {
-    const n = Number(s);
-    return Number.isFinite(n) ? [n] : null;
-  }
-  const a = Number(s.slice(0, dash).trim());
-  const b = Number(s.slice(dash + 1).trim());
-  if (!Number.isFinite(a) || !Number.isFinite(b) || b < a) return null;
-  const pages = [];
-  for (let p = a; p <= b; p++) pages.push(p);
-  return pages;
-}
-
-function pageSpecContains(spec, page) {
-  const pages = parsePageSpec(spec);
-  return pages != null && pages.includes(page);
-}
-
 function isInteractiveArea(target) {
   if (!target || typeof target.closest !== "function") return false;
   return Boolean(target.closest(".control-panel, .topbar, input, select, textarea, button, a"));
-}
-
-function mergeRanges(ranges) {
-  const sorted = ranges
-    .filter((r) => Array.isArray(r) && Number.isFinite(r[0]) && Number.isFinite(r[1]) && r[1] > r[0])
-    .slice()
-    .sort((a, b) => a[0] - b[0]);
-  if (!sorted.length) return [];
-  const out = [sorted[0]];
-  for (let i = 1; i < sorted.length; i++) {
-    const prev = out[out.length - 1];
-    const cur = sorted[i];
-    if (cur[0] <= prev[1]) prev[1] = Math.max(prev[1], cur[1]);
-    else out.push(cur);
-  }
-  return out;
-}
-
-function arabicLettersAndMap(s) {
-  let letters = "";
-  const map = [];
-  for (let i = 0; i < s.length; i++) {
-    const ch = s[i];
-    if (ch >= "\u0621" && ch <= "\u064A") {
-      letters += ch;
-      map.push(i);
-    }
-  }
-  return { letters, map };
-}
-
-function highlightedLinesToHtml(pageObj, highlightChar, ranges) {
-  if (!pageObj || !highlightChar) return linesToHtml(pageObj);
-  const lines = [];
-  for (let i = 1; i <= 15; i++) {
-    const k = `line${i}`;
-    lines.push(pageObj[k] ? String(pageObj[k]) : "");
-  }
-
-  const merged = Array.isArray(ranges) ? mergeRanges(ranges) : [];
-  let rangeIdx = 0;
-
-  const out = [];
-  let baseOffset = 0;
-  for (const line of lines) {
-    if (!line.length) {
-      out.push("&nbsp;");
-      baseOffset += 1;
-      continue;
-    }
-
-    let s = "";
-    for (let j = 0; j < line.length; j++) {
-      const ch = line[j];
-      const pos = baseOffset + j;
-      while (rangeIdx < merged.length && pos >= merged[rangeIdx][1]) rangeIdx++;
-      const inRange = !merged.length || (rangeIdx < merged.length && pos >= merged[rangeIdx][0] && pos < merged[rangeIdx][1]);
-
-      if (inRange && ch === highlightChar) {
-        s += `<span style="color:#1b8f2e; font-weight:700;">${escapeHtml(ch)}</span>`;
-      } else {
-        s += escapeHtml(ch);
-      }
-    }
-    out.push(s);
-    baseOffset += line.length + 1;
-  }
-  return out.join("<br>");
 }
 
 function computeSpread(page) {
@@ -260,34 +167,51 @@ function byId(id) {
   return el;
 }
 
+function surahLabel(obj) {
+  const name = obj?.sura_name_en ? String(obj.sura_name_en) : "";
+  const no = obj?.sura_no ? Number(obj.sura_no) : null;
+  const link = no === 114
+    ? ` <a href="/quran/tafseer/${no}" title="Tafseer" style="color:#1a0dab;">Tafsir</a>`
+    : "";
+  return escapeHtml(name) + link;
+}
+
 function renderSingle(pages, page, dimColor) {
   const rightPage = byId("rightPage");
   const leftPage = byId("leftPage");
+  const sideSpacer = byId("sideSpacer");
   leftPage.classList.add("hidden");
 
   const obj = pages[String(page)];
   byId("rightLabel").textContent = `Page ${page}`;
-  byId("rightSura").textContent = obj?.sura_name_en ? String(obj.sura_name_en) : "";
+  byId("rightSura").innerHTML = surahLabel(obj);
   byId("rightText").innerHTML = dimColor ? linesToHtmlLongest(obj, dimColor) : linesToHtml(obj);
 
   rightPage.classList.remove("hidden");
+
+  // Indicateur droite/gauche : bloc de 2 cm du côté opposé (comme en spread).
+  const isRight = page % 2 === 1; // impaire = page de droite
+  sideSpacer.classList.remove("hidden");
+  sideSpacer.style.order = isRight ? "2" : "-1";
 }
 
 function renderSpread(pages, page, dimColor) {
   const rightPage = byId("rightPage");
   const leftPage = byId("leftPage");
+  const sideSpacer = byId("sideSpacer");
+  sideSpacer.classList.add("hidden");
   const spread = computeSpread(page);
 
   const rightObj = pages[String(spread.right)];
   byId("rightLabel").textContent = `Page ${spread.right}`;
-  byId("rightSura").textContent = rightObj?.sura_name_en ? String(rightObj.sura_name_en) : "";
+  byId("rightSura").innerHTML = surahLabel(rightObj);
   byId("rightText").innerHTML = dimColor ? linesToHtmlLongest(rightObj, dimColor) : linesToHtml(rightObj);
   rightPage.classList.remove("hidden");
 
   if (spread.left) {
     const leftObj = pages[String(spread.left)];
     byId("leftLabel").textContent = `Page ${spread.left}`;
-    byId("leftSura").textContent = leftObj?.sura_name_en ? String(leftObj.sura_name_en) : "";
+    byId("leftSura").innerHTML = surahLabel(leftObj);
     byId("leftText").innerHTML = dimColor ? linesToHtmlLongest(leftObj, dimColor) : linesToHtml(leftObj);
     leftPage.classList.remove("hidden");
   } else {
@@ -339,21 +263,9 @@ async function main() {
   const fontSizeWrap = byId("fontSizeWrap");
   const fontSize = byId("fontSize");
   const fontSizeValue = byId("fontSizeValue");
-  const drawBtn = document.getElementById("drawBtn");
-  const chartContainer = document.getElementById("chartContainer");
+  const dimWrap = byId("dimWrap");
   const dimRange = document.getElementById("dimRange");
   const dimValue = document.getElementById("dimValue");
-
-  let warshDataCache = null;
-  async function loadWarshData() {
-    if (warshDataCache) return warshDataCache;
-    const res = await fetch("./inputdata/warshData_v2-1.json", { cache: "no-store" });
-    if (!res.ok) throw new Error(`Failed to load warshData_v2-1.json (${res.status})`);
-    const data = await res.json();
-    if (!Array.isArray(data)) throw new Error("Invalid warshData_v2-1.json structure (expected array)");
-    warshDataCache = data;
-    return warshDataCache;
-  }
 
   let pages;
   let suras;
@@ -401,33 +313,6 @@ async function main() {
     return null;
   }
 
-  let rangeSyncPage = null;
-  let currentRange = null;
-
-  function idsForPage(data, page) {
-    const ids = [];
-    for (const o of data) {
-      if (!pageSpecContains(o?.page, page)) continue;
-      const id = Number(o?.id);
-      if (Number.isFinite(id)) ids.push(id);
-    }
-    if (!ids.length) return null;
-    ids.sort((a, b) => a - b);
-    return [ids[0], ids[ids.length - 1]];
-  }
-
-  async function syncRangeToPage(page) {
-    rangeSyncPage = page;
-    try {
-      const data = await loadWarshData();
-      if (rangeSyncPage !== page) return;
-      const range = idsForPage(data, page);
-      currentRange = range ? { lo: range[0], hi: range[1] } : null;
-    } catch {
-      // keep previous range if data can't be loaded
-    }
-  }
-
   function applyState(next) {
     const page = clampPage(next.page);
     const mode = next.mode === "spread" ? "spread" : next.mode === "memorize" ? "memorize" : "single";
@@ -449,6 +334,7 @@ async function main() {
     if (mode === "memorize") {
       document.body.classList.add("memorize-mode");
       fontSizeWrap.classList.add("visible");
+      dimWrap.classList.add("visible");
       const fs = next.fs != null ? clampFontSizePx(next.fs) : getStoredFontSize();
       fontSize.value = String(fs);
       fontSizeValue.textContent = `${fs}px`;
@@ -457,10 +343,10 @@ async function main() {
       if (dimRange) dimRange.value = String(clampDimLevel(dimLevel));
       if (dimValue) dimValue.textContent = `${clampDimLevel(dimLevel)}%`;
 
-      if (normalizedPage !== rangeSyncPage) syncRangeToPage(normalizedPage);
     } else {
       document.body.classList.remove("memorize-mode");
       fontSizeWrap.classList.remove("visible");
+      dimWrap.classList.remove("visible");
       fontSizeValue.textContent = "";
       if (dimValue) dimValue.textContent = "";
       for (const el of document.querySelectorAll(".mushaf")) el.style.removeProperty("font-size");
@@ -477,113 +363,6 @@ async function main() {
     next.page = normalizePageForMode(next.mode, clampPage(next.page));
     if (next.mode !== "memorize") { next.fs = null; next.dim = null; }
     setHash(next);
-  }
-
-  if (drawBtn && chartContainer) {
-    drawBtn.addEventListener("click", async () => {
-      if (!currentRange) {
-        chartContainer.innerHTML = `<div style="direction:ltr;">No range loaded for the current page.</div>`;
-        return;
-      }
-
-      const lo = currentRange.lo;
-      const hi = currentRange.hi;
-
-      chartContainer.innerHTML = `<div style="direction:ltr;">Loading…</div>`;
-      let data;
-      try {
-        data = await loadWarshData();
-      } catch (e) {
-        chartContainer.innerHTML = `<div style="direction:ltr;">${escapeHtml(String(e))}</div>`;
-        return;
-      }
-
-      const cur = getState();
-      const curMode = cur.mode === "spread" ? "spread" : cur.mode === "memorize" ? "memorize" : "single";
-      const curPage = normalizePageForMode(curMode, clampPage(cur.page));
-
-      let combined = "";
-      const ayasInRange = [];
-      const ayasOnCurrentPage = [];
-      const pagesTouched = new Set();
-      for (const o of data) {
-        const id = Number(o?.id);
-        if (!Number.isFinite(id) || id < lo || id > hi) continue;
-        if (o && o.aya_text != null) {
-          const t = String(o.aya_text);
-          combined += t;
-          ayasInRange.push(t);
-          const specPages = parsePageSpec(o?.page);
-          if (specPages) for (const p of specPages) pagesTouched.add(p);
-          if (pageSpecContains(o?.page, curPage)) ayasOnCurrentPage.push(t);
-        }
-      }
-
-      const cleaned = combined.replace(/[^\u0621-\u064A]/g, "").replace(/[ءآأؤإئاى]/g, "");
-
-      const counts = new Map();
-      for (const ch of cleaned) counts.set(ch, (counts.get(ch) || 0) + 1);
-
-      if (!counts.size) {
-        chartContainer.innerHTML = `<div style="direction:ltr;">No letters found for id range ${lo}..${hi} after filters.</div>`;
-        return;
-      }
-
-      let max = 0;
-      for (const v of counts.values()) if (v > max) max = v;
-
-      const rows = Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
-      const total = cleaned.length;
-      const topChar = rows[0]?.[0] ? String(rows[0][0]) : "";
-
-      const parts = [];
-      const touched = Array.from(pagesTouched).sort((a, b) => a - b);
-      const touchedNote = touched.length ? ` — Pages: ${touched.join(", ")}` : "";
-      const onPageNote = ayasOnCurrentPage.length ? "" : ` — none on current page ${curPage}`;
-      parts.push(
-        `<div style="direction:ltr; font-size:12px; color:#333; margin-bottom:10px;">Range ${lo}..${hi} — Total letters: ${total}${touchedNote}${onPageNote}</div>`
-      );
-
-      for (const [ch, n] of rows) {
-        const pct = (n / max) * 100;
-        const pctText = (Math.round(pct * 10) / 10).toFixed(1);
-        parts.push(
-          `<div style="direction:ltr; display:flex; align-items:center; gap:10px; margin:6px 0;">` +
-            `<div style="width:26px; text-align:center; font-family:arab;">${escapeHtml(String(ch))}</div>` +
-            `<div style="width:46px; text-align:right; font-variant-numeric: tabular-nums;">${n}</div>` +
-            `<div style="flex:1 1 auto; height:12px; background:#e6e6e6; border-radius:8px; overflow:hidden;">` +
-              `<div style="height:100%; width:${pctText}%; background:#4a90e2;"></div>` +
-            `</div>` +
-          `</div>`
-        );
-      }
-
-      chartContainer.innerHTML = parts.join("");
-      const pageObj = pages[String(curPage)];
-      if (!pageObj || !topChar) return;
-      if (!ayasOnCurrentPage.length) return;
-
-      const lines = [];
-      for (let i = 1; i <= 15; i++) lines.push(pageObj[`line${i}`] ? String(pageObj[`line${i}`]) : "");
-      const pageText = lines.join("\n");
-      const pageLM = arabicLettersAndMap(pageText);
-      const ranges = [];
-      let from = 0;
-      for (const ayaText of ayasOnCurrentPage) {
-        const ayaLetters = String(ayaText).replace(/[^\u0621-\u064A]/g, "");
-        if (!ayaLetters) continue;
-        const idx = pageLM.letters.indexOf(ayaLetters, from);
-        if (idx === -1) continue;
-        const start = pageLM.map[idx];
-        const end = pageLM.map[idx + ayaLetters.length - 1] + 1;
-        ranges.push([start, end]);
-        from = idx + ayaLetters.length;
-      }
-
-      const merged = mergeRanges(ranges);
-      if (!merged.length) return;
-      byId("rightText").innerHTML = highlightedLinesToHtml(pageObj, topChar, merged);
-    });
   }
 
   window.addEventListener("hashchange", () => {

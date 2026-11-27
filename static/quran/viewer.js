@@ -170,7 +170,7 @@ function byId(id) {
 function surahLabel(obj) {
   const name = obj?.sura_name_en ? String(obj.sura_name_en) : "";
   const no = obj?.sura_no ? Number(obj.sura_no) : null;
-  const link = no === 114
+  const link = (no >= 36 && no <= 114)
     ? ` <a href="/quran/tafseer/${no}" title="Tafseer" style="color:#1a0dab;">Tafsir</a>`
     : "";
   return escapeHtml(name) + link;

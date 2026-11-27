@@ -43,3 +43,11 @@ PayoneerToRevolutHelveticore.png
 
 # Données brutes d'entrée (cours/drone) — hors du dépôt
 /input/
+
+# Tafseer généré : seuls les .html (servis via R2) et le script sont versionnés.
+# Les .docx sont la source Google Doc locale, hors du dépôt.
+output/tafsir/*.docx
+
+# Python
+__pycache__/
+*.pyc

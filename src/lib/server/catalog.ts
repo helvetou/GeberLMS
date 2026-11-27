@@ -172,6 +172,31 @@ export async function getPublicCourseBySlug(
   return { course, syllabus };
 }
 
+/** Détail admin d'un cours (lecture) : arbre complet modules → leçons →
+ *  ressources, éléments cachés inclus, ordonné par position. */
+export async function getAdminCourseDetail(db: DB, courseId: string): Promise<CourseNode | null> {
+  const course = await db.select().from(courses).where(eq(courses.id, courseId)).get();
+  if (!course) return null;
+
+  const moduleRows = await db.select().from(modules).where(eq(modules.courseId, courseId)).all();
+  const moduleIds = moduleRows.map((m) => m.id);
+  const lessonRows = moduleIds.length
+    ? await db.select().from(lessons).where(inArray(lessons.moduleId, moduleIds)).all()
+    : [];
+  const lessonIds = lessonRows.map((l) => l.id);
+  const resourceRows = lessonIds.length
+    ? await db.select().from(resources).where(inArray(resources.lessonId, lessonIds)).all()
+    : [];
+
+  const [node] = nestCatalog({
+    courses: [course],
+    modules: moduleRows,
+    lessons: lessonRows,
+    resources: resourceRows,
+  });
+  return node ?? null;
+}
+
 export async function deleteCourse(db: DB, id: string): Promise<void> {
   const row = await db.select({ id: courses.id }).from(courses).where(eq(courses.id, id)).get();
   if (!row) throw new CatalogServiceError(ErrorCodes.COURSE_NOT_FOUND, 'Cours introuvable');

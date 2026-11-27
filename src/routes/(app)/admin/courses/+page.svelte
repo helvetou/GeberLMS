@@ -1,15 +1,22 @@
 <script lang="ts">
   import { useI18n } from '$lib/i18n.svelte';
   const { t, tError } = useI18n();
+  import * as Card from '$lib/components/ui/card/index.js';
+  import { Badge } from '$lib/components/ui/badge/index.js';
+  import { Button } from '$lib/components/ui/button/index.js';
+  import BookOpenIcon from '@lucide/svelte/icons/book-open';
+  import ArrowRightIcon from '@lucide/svelte/icons/arrow-right';
+  import EyeOffIcon from '@lucide/svelte/icons/eye-off';
   import type { PageProps } from './$types';
   let { data, form }: PageProps = $props();
 
-  function nextVisibility(current: string): string {
-    return current === 'visible' ? 'hidden' : 'visible';
+  function lessonCount(node: (typeof data.catalog)[number]): number {
+    return node.modules.reduce((n, m) => n + m.lessons.length, 0);
   }
 
-  function labelToggle(current: string): string {
-    return current === 'visible' ? t('common.hide') : t('common.show');
+  function priceLabel(priceCents: number | undefined): string {
+    if (!priceCents || priceCents <= 0) return t('catalog.free');
+    return `€${(priceCents / 100).toFixed(2)}`;
   }
 </script>
 
@@ -23,183 +30,127 @@
   <p role="alert">{tError(data.error)}</p>
 {/if}
 
-{#if form?.error}
-  <p role="alert">{tError(form.error)}</p>
-{/if}
-
-<h2>{t('courses.new')}</h2>
-<form method="POST" action="?/createCourse">
-  <label>{t('common.title')} <input type="text" name="title" required /></label>
-  <label>{t('courses.slug')} <input type="text" name="slug" required /></label>
-  <label>
-    {t('courses.language')}
-    <select name="language">
-      <option value="fr">fr</option>
-      <option value="en">en</option>
-      <option value="ar">ar</option>
-      <option value="de">de</option>
-    </select>
-  </label>
-  <label>{t('courses.price')} <input type="number" name="priceCents" value="0" min="0" required /></label>
-  <label>{t('courses.category')} <input type="text" name="category" /></label>
-  <label>{t('courses.level')} <input type="text" name="level" /></label>
-  <label>
-    {t('courses.tutor')}
-    <select name="tutorId">
-      <option value="">{t('learner.none')}</option>
-      {#each data.tutors as tutor (tutor.id)}
-        <option value={tutor.id}>{tutor.name ?? tutor.email}</option>
-      {/each}
-    </select>
-  </label>
-  <label>{t('courses.description')} <textarea name="description" rows="2"></textarea></label>
-  <label><input type="checkbox" name="isPublic" /> {t('courses.public')}</label>
-  <button type="submit">{t('common.create')}</button>
-</form>
-
-<hr />
-
-<h2>{t('courses.import')}</h2>
-<form method="POST" action="?/importCourse">
-  <label>
-    {t('courses.importMode')}
-    <select name="mode">
-      <option value="strict">{t('courses.importStrict')}</option>
-      <option value="upsert">{t('courses.importUpsert')}</option>
-    </select>
-  </label>
-  <label>
-    {t('courses.importJson')}
-    <textarea name="json" rows="8" required placeholder="Collez le JSON du cours (title, slug, language, price_cents, modules…)"></textarea>
-  </label>
-  <button type="submit">{t('courses.importSubmit')}</button>
-</form>
-
-{#if form?.ok && form.slug}
-  <p role="status">{t('courses.imported', { slug: form.slug, modules: form.modules, lessons: form.lessons })}</p>
-{/if}
-
-<hr />
-
-{#each data.catalog as node (node.course.id)}
-  <details open>
-    <summary>
-      <strong>{node.course.title}</strong>
-      <span> ({node.course.language}, €{(node.course.priceCents ?? 0) / 100})</span>
-      {#if node.course.visibility === 'hidden'}<span> — {t('common.hidden')}</span>{/if}
-    </summary>
-
-    <div>
-      <form method="POST" action="?/renameCourse" style="display: inline">
-        <input type="hidden" name="id" value={node.course.id} />
-        <input type="text" name="title" value={node.course.title} required />
-        <button type="submit">{t('common.rename')}</button>
-      </form>
-      <form method="POST" action="?/toggleCourse" style="display: inline">
-        <input type="hidden" name="id" value={node.course.id} />
-        <input type="hidden" name="visibility" value={nextVisibility(node.course.visibility)} />
-        <button type="submit">{labelToggle(node.course.visibility)}</button>
-      </form>
-      <form method="POST" action="?/deleteCourse" style="display: inline">
-        <input type="hidden" name="id" value={node.course.id} />
-        <button type="submit">{t('common.delete')}</button>
-      </form>
+<details class="mt-4 rounded-lg border bg-background p-4">
+  <summary class="cursor-pointer font-medium">{t('courses.new')}</summary>
+  <form method="POST" action="?/createCourse" class="mt-3 grid gap-3 sm:grid-cols-2">
+    <label class="grid gap-1 text-sm">
+      {t('common.title')}
+      <input type="text" name="title" required class="h-9 rounded-md border border-input bg-transparent px-2" />
+    </label>
+    <label class="grid gap-1 text-sm">
+      {t('courses.slug')}
+      <input type="text" name="slug" required class="h-9 rounded-md border border-input bg-transparent px-2" />
+    </label>
+    <label class="grid gap-1 text-sm">
+      {t('courses.language')}
+      <select name="language" class="h-9 rounded-md border border-input bg-transparent px-2">
+        <option value="fr">fr</option>
+        <option value="en">en</option>
+        <option value="ar">ar</option>
+        <option value="de">de</option>
+      </select>
+    </label>
+    <label class="grid gap-1 text-sm">
+      {t('courses.price')}
+      <input type="number" name="priceCents" value="0" min="0" required class="h-9 rounded-md border border-input bg-transparent px-2" />
+    </label>
+    <label class="grid gap-1 text-sm">
+      {t('courses.category')}
+      <input type="text" name="category" class="h-9 rounded-md border border-input bg-transparent px-2" />
+    </label>
+    <label class="grid gap-1 text-sm">
+      {t('courses.level')}
+      <input type="text" name="level" class="h-9 rounded-md border border-input bg-transparent px-2" />
+    </label>
+    <label class="grid gap-1 text-sm">
+      {t('courses.tutor')}
+      <select name="tutorId" class="h-9 rounded-md border border-input bg-transparent px-2">
+        <option value="">{t('learner.none')}</option>
+        {#each data.tutors as tutor (tutor.id)}
+          <option value={tutor.id}>{tutor.name ?? tutor.email}</option>
+        {/each}
+      </select>
+    </label>
+    <label class="grid gap-1 text-sm sm:col-span-2">
+      {t('courses.description')}
+      <textarea name="description" rows="2" class="rounded-md border border-input bg-transparent px-2 py-1"></textarea>
+    </label>
+    <label class="flex items-center gap-2 text-sm sm:col-span-2">
+      <input type="checkbox" name="isPublic" class="accent-primary" /> {t('courses.public')}
+    </label>
+    <div class="sm:col-span-2">
+      <Button type="submit">{t('common.create')}</Button>
     </div>
+  </form>
+</details>
 
-    <h3>{t('courses.modules')}</h3>
-    <form method="POST" action="?/createModule">
-      <input type="hidden" name="courseId" value={node.course.id} />
-      <input type="text" name="title" placeholder={t('courses.moduleTitle')} required />
-      <input type="number" name="position" value="0" min="0" style="width: 4em" />
-      <button type="submit">{t('courses.addModule')}</button>
-    </form>
+<details class="mt-3 rounded-lg border bg-background p-4">
+  <summary class="cursor-pointer font-medium">{t('courses.import')}</summary>
+  <form method="POST" action="?/importCourse" class="mt-3 grid gap-3">
+    <label class="grid gap-1 text-sm">
+      {t('courses.importMode')}
+      <select name="mode" class="h-9 rounded-md border border-input bg-transparent px-2">
+        <option value="strict">{t('courses.importStrict')}</option>
+        <option value="upsert">{t('courses.importUpsert')}</option>
+      </select>
+    </label>
+    <label class="grid gap-1 text-sm">
+      {t('courses.importJson')}
+      <textarea name="json" rows="8" required class="rounded-md border border-input bg-transparent px-2 py-1 font-mono text-xs" placeholder="Collez le JSON du cours (title, slug, language, price_cents, modules…)"></textarea>
+    </label>
+    <div>
+      <Button type="submit">{t('courses.importSubmit')}</Button>
+    </div>
+  </form>
 
-    <ul>
-      {#each node.modules as m (m.module.id)}
-        <li>
-          <strong>{m.module.title}</strong>
-          {#if m.module.visibility === 'hidden'}<span> — {t('common.hidden')}</span>{/if}
-          <form method="POST" action="?/renameModule" style="display: inline">
-            <input type="hidden" name="id" value={m.module.id} />
-            <input type="text" name="title" value={m.module.title} required />
-            <button type="submit">{t('common.rename')}</button>
-          </form>
-          <form method="POST" action="?/toggleModule" style="display: inline">
-            <input type="hidden" name="id" value={m.module.id} />
-            <input type="hidden" name="visibility" value={nextVisibility(m.module.visibility)} />
-            <button type="submit">{labelToggle(m.module.visibility)}</button>
-          </form>
-          <form method="POST" action="?/deleteModule" style="display: inline">
-            <input type="hidden" name="id" value={m.module.id} />
-            <button type="submit">{t('common.delete')}</button>
-          </form>
+  {#if form?.ok && form.slug}
+    <p role="status" class="mt-3 text-sm text-muted-foreground">
+      {t('courses.imported', { slug: form.slug, modules: form.modules, lessons: form.lessons })}
+    </p>
+  {/if}
+  {#if form?.error}
+    <p role="alert" class="mt-3">{tError(form.error)}</p>
+  {/if}
+</details>
 
-          <form method="POST" action="?/createLesson">
-            <input type="hidden" name="moduleId" value={m.module.id} />
-            <input type="text" name="title" placeholder={t('courses.lessonTitle')} required />
-            <select name="type">
-              <option value="video">video</option>
-              <option value="text">text</option>
-              <option value="quiz">quiz</option>
-            </select>
-            <input type="number" name="position" value="0" min="0" style="width: 4em" />
-            <button type="submit">{t('courses.addLesson')}</button>
-          </form>
-
-          <ul>
-            {#each m.lessons as l (l.lesson.id)}
-              <li>
-                <strong>{l.lesson.title}</strong>
-                <span> ({l.lesson.type})</span>
-                {#if l.lesson.visibility === 'hidden'}<span> — {t('common.hidden')}</span>{/if}
-                <form method="POST" action="?/renameLesson" style="display: inline">
-                  <input type="hidden" name="id" value={l.lesson.id} />
-                  <input type="text" name="title" value={l.lesson.title} required />
-                  <button type="submit">{t('common.rename')}</button>
-                </form>
-                <form method="POST" action="?/toggleLesson" style="display: inline">
-                  <input type="hidden" name="id" value={l.lesson.id} />
-                  <input type="hidden" name="visibility" value={nextVisibility(l.lesson.visibility)} />
-                  <button type="submit">{labelToggle(l.lesson.visibility)}</button>
-                </form>
-                <form method="POST" action="?/deleteLesson" style="display: inline">
-                  <input type="hidden" name="id" value={l.lesson.id} />
-                  <button type="submit">{t('common.delete')}</button>
-                </form>
-
-                <form method="POST" action="?/createResource">
-                  <input type="hidden" name="lessonId" value={l.lesson.id} />
-                  <input type="text" name="title" placeholder={t('courses.resourceTitle')} required />
-                  <button type="submit">{t('courses.addResource')}</button>
-                </form>
-
-                <ul>
-                  {#each l.resources as r (r.id)}
-                    <li>
-                      {r.title}
-                      {#if r.visibility === 'hidden'}<span> — {t('common.hidden')}</span>{/if}
-                      <form method="POST" action="?/renameResource" style="display: inline">
-                        <input type="hidden" name="id" value={r.id} />
-                        <input type="text" name="title" value={r.title} required />
-                        <button type="submit">{t('common.rename')}</button>
-                      </form>
-                      <form method="POST" action="?/toggleResource" style="display: inline">
-                        <input type="hidden" name="id" value={r.id} />
-                        <input type="hidden" name="visibility" value={nextVisibility(r.visibility)} />
-                        <button type="submit">{labelToggle(r.visibility)}</button>
-                      </form>
-                      <form method="POST" action="?/deleteResource" style="display: inline">
-                        <input type="hidden" name="id" value={r.id} />
-                        <button type="submit">{t('common.delete')}</button>
-                      </form>
-                    </li>
-                  {/each}
-                </ul>
-              </li>
-            {/each}
-          </ul>
-        </li>
-      {/each}
-    </ul>
-  </details>
-{/each}
+{#if data.catalog.length === 0}
+  <p class="mt-8 text-muted-foreground">{t('catalog.noCourses')}</p>
+{:else}
+  <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    {#each data.catalog as node (node.course.id)}
+      <a href={`/admin/courses/${node.course.id}`} class="group block h-full focus-visible:outline-none">
+        <Card.Root class="h-full transition-all duration-200 group-hover:-translate-y-0.5 group-hover:shadow-lg">
+          <Card.Header>
+            <div class="flex items-start gap-2">
+              <div class="rounded-md bg-muted p-2 text-muted-foreground"><BookOpenIcon class="size-4" /></div>
+              <div class="min-w-0">
+                <Card.Title class="line-clamp-2">{node.course.title}</Card.Title>
+                {#if node.course.description}
+                  <Card.Description class="line-clamp-2">{node.course.description}</Card.Description>
+                {/if}
+              </div>
+            </div>
+          </Card.Header>
+          <Card.Content>
+            <div class="flex flex-wrap items-center gap-2">
+              <Badge variant="outline">{t(`lang.${node.course.language}`)}</Badge>
+              {#if node.course.category}<Badge variant="secondary">{node.course.category}</Badge>{/if}
+              {#if node.course.visibility === 'hidden'}
+                <Badge variant="destructive"><EyeOffIcon class="size-3" /> {t('common.hidden')}</Badge>
+              {/if}
+              <span class="ml-auto text-sm font-semibold">{priceLabel(node.course.priceCents)}</span>
+            </div>
+            <p class="mt-3 text-xs text-muted-foreground">
+              {node.modules.length} {t('courses.modules')} · {lessonCount(node)} {t('common.lessons')}
+            </p>
+          </Card.Content>
+          <Card.Footer class="pt-0">
+            <span class="inline-flex items-center gap-1 text-sm font-medium text-primary opacity-0 transition-opacity group-hover:opacity-100">
+              {t('catalog.learnMore')} <ArrowRightIcon class="size-4" />
+            </span>
+          </Card.Footer>
+        </Card.Root>
+      </a>
+    {/each}
+  </div>
+{/if}

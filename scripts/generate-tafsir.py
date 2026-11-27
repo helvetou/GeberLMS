@@ -70,7 +70,7 @@ def normalize_verse(s: str) -> str:
 # Motifs de bruit à retirer
 PAGE_NUMBER = re.compile(r'^\s*\d+\s*$')                 # numéro de page isolé
 BASMALA = re.compile(r'^[\s\S]*?بِ?sْمِ?\s*اللهِ?\s*الرَّحْمَ?نِ?\s*الرَّحِيمِ?\s*$')
-FOOTNOTE_START = re.compile(r'^[.\s]*\(?(\d+)\)\s*(.*)$')
+FOOTNOTE_START = re.compile(r'^[.\s)]*\(?(\d+)\)\s*(.*)$')
 INLINE_NOTE = re.compile(r'\((\d+)\)')
 
 def is_page_number(line: str) -> bool:
@@ -91,6 +91,24 @@ def header_probe(line: str) -> str:
     t = line.replace('\ufdfa', '').strip()
     t = re.sub(r'\([^)]*\)$', '', t).strip()
     return t
+
+
+# Fragments de décor de page (OCR) — jamais du contenu de tafseer.
+PAGE_NOISE_FRAGMENTS = frozenset({
+    'ج', 'ج.', 'رج', 'روج', 'رود', 'رور', 'اردو', 'وستم', 'مدورة',
+    'و', 'ه', 'وو', 'ور', 'وج', 'ود', 'وس',
+})
+
+
+def is_page_noise(line: str) -> bool:
+    """Décor de page : fragments de « صلى الله عليه وسلم » (lettres persanes/
+    ourdoues non arabes ے/ی) ou débris isolés de bas de page."""
+    t = line.strip()
+    if any(c in t for c in 'ےی'):  # U+06D2 / U+06CC — OCR de « صلى »
+        return True
+    if t in PAGE_NOISE_FRAGMENTS:
+        return True
+    return False
 
 
 # ─── Extraction des sourates depuis le RTF ────────────────────────────────
@@ -151,8 +169,7 @@ def extract_blocks(rtf_text: str) -> dict[int, list[str]]:
 def _strip_verse_block(body: list[str], verse_concat: str) -> list[str]:
     """Retire le bloc de verset en tête du corps (concaténation des ayat de la
     page, éventuellement coupée sur plusieurs lignes), en le comparant au texte
-    Hafs complet normalisé. S'arrête à la première ligne qui n'est plus du verset.
-    """
+    Hafs complet normalisé. S'arrête à la première ligne qui n'est plus du verset."""
     acc = ''
     matched = 0
     for line in body:
@@ -163,6 +180,104 @@ def _strip_verse_block(body: list[str], verse_concat: str) -> list[str]:
         else:
             break
     return body[matched:]
+
+
+def _split_on_middle_verse(body: list[str], verse_concat: str) -> list[list[str]]:
+    """Découpe le corps (déjà privé de son bloc de verset de tête) en pages sur
+    les blocs de verset de ≥ 2 lignes consécutives — ils signalent une page
+    fusionnée dont l'en-tête a été perdu par l'OCR. Les lignes de verset sont
+    écartées ; une ligne isolée qui ressemble à un verset est conservée (citation)."""
+    pages: list[list[str]] = []
+    current: list[str] = []
+    verse_buf: list[str] = []
+    acc = ''
+    for line in body:
+        candidate = acc + normalize_verse(line)
+        if candidate in verse_concat:
+            verse_buf.append(line)
+            acc = candidate
+        else:
+            if len(verse_buf) >= 2:
+                if current:
+                    pages.append(current)
+                    current = []
+            else:
+                current.extend(verse_buf)
+            verse_buf = []
+            acc = ''
+            current.append(line)
+    if len(verse_buf) >= 2:
+        if current:
+            pages.append(current)
+            current = []
+    else:
+        current.extend(verse_buf)
+    if current:
+        pages.append(current)
+    return pages
+
+
+# Marqueur de numéro d'ayah en tête de ligne (explication) : « ۱۳ - », « 16 - », « -١- »
+VERSE_MARKER = re.compile(r'^-?\s*[0-9٠-٩۰-۹]{1,3}\s*[-–—]')
+
+
+def _parse_notes(notes_block: list[str]) -> dict[str, str]:
+    """Parse un bloc de notes « (n) texte » (multi-lignes) en dict {n: texte}."""
+    notes: dict[str, str] = {}
+    cur_key = None
+    for t in notes_block:
+        m = FOOTNOTE_START.match(norm_digits(t))
+        if m:
+            cur_key = m.group(1)
+            notes[cur_key] = m.group(2).strip()
+        elif cur_key is not None:
+            notes[cur_key] = (notes[cur_key] + ' ' + t.strip()).strip()
+    for k in notes:
+        notes[k] = re.sub(r'\s+\.', '.', notes[k])
+        notes[k] = notes[k].rstrip('(').strip()
+    return notes
+
+
+def _emit(explanation: list[str], notes: dict[str, str], output_lines: list[str]) -> None:
+    for para in explanation:
+        out = norm_digits(para)
+        def repl(m):
+            k = m.group(1)
+            return f'({notes[k]})' if k in notes else m.group(0)
+        out = INLINE_NOTE.sub(repl, out)
+        output_lines.append(out)
+
+
+def _resolve_page(page: list[str], output_lines: list[str]) -> None:
+    """Résout les notes de bas de page d'une « page » : l'explication précède le
+    bloc de notes (première ligne commençant par (n)). Si un marqueur d'ayah
+    « N - » apparaît dans le bloc de notes, c'est le signe d'une page fusionnée
+    (en-tête perdu) : on traite d'abord les notes déjà lues, puis on récure sur
+    l'explication qui suit."""
+    note_start = None
+    for i, t in enumerate(page):
+        if FOOTNOTE_START.match(norm_digits(t)):
+            note_start = i
+            break
+
+    explanation = page if note_start is None else page[:note_start]
+    notes_block = [] if note_start is None else page[note_start:]
+
+    # Premier marqueur d'ayah dans le bloc de notes → frontière de page fusionnée.
+    first_marker = None
+    for i, t in enumerate(notes_block):
+        if VERSE_MARKER.match(norm_digits(t)):
+            first_marker = i
+            break
+
+    if first_marker is None:
+        notes = _parse_notes(notes_block)
+        _emit(explanation, notes, output_lines)
+    else:
+        notes = _parse_notes(notes_block[:first_marker])
+        _emit(explanation, notes, output_lines)
+        # Le reste (marqueur + explication + notes) est une page à part entière.
+        _resolve_page(notes_block[first_marker:], output_lines)
 
 
 def parse_block(block: list[str], verses: list[str]) -> list[str]:
@@ -205,45 +320,20 @@ def parse_block(block: list[str], verses: list[str]) -> list[str]:
                 continue  # nom seul
             if re.fullmatch(r'-?\s*[0-9٠-٩۰-۹]+', norm_digits(t)):
                 continue  # numéro d'ayah isolé « -٣ » / « ٤ »
+            if re.fullmatch(r'\([0-9٠-٩۰-۹]+\)', norm_digits(t)):
+                continue  # renvoi de note isolé « (۱) » (OCR) — pas une définition
+            if is_page_noise(t):
+                continue  # décor de page (fragments « صلى », juz, bas de page)
             # méta de la sourate (nom alternatif, type, nombre d'ayat) : avant la basmala
             if first_basmala is not None and i < first_basmala:
                 continue
             body.append(t)
 
-        # Retirer le bloc de verset en tête (doublon du texte Hafs)
+        # Retirer le bloc de verset en tête (doublon du texte Hafs), puis
+        # découper sur les blocs de verset restants (pages fusionnées).
         body = _strip_verse_block(body, verse_concat)
-
-        # Trouver le bloc de notes : première ligne commençant par (n)
-        note_start = None
-        for i, t in enumerate(body):
-            if FOOTNOTE_START.match(norm_digits(t)):
-                note_start = i
-                break
-
-        explanation = body if note_start is None else body[:note_start]
-        notes_block = [] if note_start is None else body[note_start:]
-
-        notes: dict[str, str] = {}
-        cur_key = None
-        for t in notes_block:
-            m = FOOTNOTE_START.match(norm_digits(t))
-            if m:
-                cur_key = m.group(1)
-                notes[cur_key] = m.group(2).strip()
-            elif cur_key is not None:
-                notes[cur_key] = (notes[cur_key] + ' ' + t.strip()).strip()
-        # nettoie les artefacts OCR : « .  » → « . » et parenthèses parasites
-        for k in notes:
-            notes[k] = re.sub(r'\s+\.', '.', notes[k])
-            notes[k] = notes[k].rstrip('(').strip()
-
-        for para in explanation:
-            out = norm_digits(para)
-            def repl(m):
-                k = m.group(1)
-                return f'({notes[k]})' if k in notes else m.group(0)
-            out = INLINE_NOTE.sub(repl, out)
-            output_lines.append(out)
+        for page in _split_on_middle_verse(body, verse_concat):
+            _resolve_page(page, output_lines)
 
     return output_lines
 

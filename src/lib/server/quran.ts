@@ -57,6 +57,16 @@ export async function getQuranTafseer(
   return obj ? await obj.text() : null;
 }
 
+/** Lit la version HTML (générée par generate-tafsir.py) depuis R2, si présente. */
+export async function getQuranTafseerHtml(
+  r2: R2Bucket | undefined,
+  surahNo: number,
+): Promise<string | null> {
+  if (!r2) return null;
+  const obj = await r2.get(`quran/tafseer/${surahNo}.html`);
+  return obj ? await obj.text() : null;
+}
+
 /** Écrit le tafseer (markdown) dans R2 — édition admin. */
 export async function updateQuranTafseer(
   db: DB,

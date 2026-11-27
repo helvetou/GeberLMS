@@ -1,6 +1,6 @@
 import type { PageServerLoad } from './$types';
 import { createDb } from '$lib/server/db';
-import { getQuranSurah, getQuranTafseer } from '$lib/server/quran';
+import { getQuranSurah, getQuranTafseer, getQuranTafseerHtml } from '$lib/server/quran';
 import { renderMarkdown } from '$lib/server/reader';
 import { pageNumbers } from '$lib/domain/quran';
 import { ErrorCodes } from '$lib/domain/errors';
@@ -15,7 +15,8 @@ export const load: PageServerLoad = async ({ params, platform }) => {
   if (!surah) return { surah: null, pages: [], tafseerHtml: null };
 
   const pages = pageNumbers(surah.startPage, surah.endPage);
-  const md = await getQuranTafseer(platform?.env?.FILES, surah);
+  const htmlVersion = await getQuranTafseerHtml(platform?.env?.FILES, n);
+  const md = htmlVersion ? null : await getQuranTafseer(platform?.env?.FILES, surah);
   const tafseerHtml = md ? renderMarkdown(md) : null;
-  return { surah, pages, tafseerHtml };
+  return { surah, pages, tafseerHtml, tafseerHtmlRaw: htmlVersion };
 };

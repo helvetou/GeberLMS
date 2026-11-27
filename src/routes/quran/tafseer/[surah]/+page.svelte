@@ -63,7 +63,13 @@
 
       <!-- Tafseer -->
       <h2 class="mt-6 font-display text-xl font-semibold">{t('quran.tafseer')}</h2>
-      {#if data.tafseerHtml}
+      {#if data.tafseerHtmlRaw}
+        <iframe
+          title={t('quran.tafseer')}
+          srcdoc={data.tafseerHtmlRaw}
+          class="mt-3 h-[75vh] w-full rounded-lg border bg-background"
+        ></iframe>
+      {:else if data.tafseerHtml}
         <div class="prose prose-sm mt-3 max-w-none rounded-lg border bg-background p-4">{@html data.tafseerHtml}</div>
       {:else}
         <p class="mt-2 text-muted-foreground">{t('quran.noTafseer')}</p>
